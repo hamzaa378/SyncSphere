@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f5f1" />
+  <meta name="description" content="SyncSphere — a local-first multi-tab synchronization observatory and conflict playground." />
+  <title>SyncSphere — The Sync Observatory</title>
+  <!-- Read persisted settings synchronously BEFORE loading styles: no light-theme flash. -->
+  <script>
+    try {
+      const p = 'syncsphere:prefs:v1:';
+      const theme = JSON.parse(localStorage.getItem(p + 'theme') || '{}').value;
+      const size = JSON.parse(localStorage.getItem(p + 'fontSize') || '{}').value;
+      const language = JSON.parse(localStorage.getItem(p + 'language') || '{}').value;
+      if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
+      if (Number.isInteger(size) && size >= 14 && size <= 22) document.documentElement.style.setProperty('--app-font-size', size + 'px');
+      if (['en', 'es', 'fr', 'hi'].includes(language)) document.documentElement.lang = language;
+    } catch (_) { /* Recover from damaged storage without blocking the page. */ }
+  </script>
+  <link rel="stylesheet" href="./assets/styles.css" />
+  <script type="module" src="./dist/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#preferences" data-i18n="skip">Skip to settings</a>
+  <div class="app">
+    <aside class="rail" aria-label="Primary navigation">
+      <a class="brand" href="#home" aria-label="SyncSphere home"><span class="brand-glyph"><span></span><span></span><span></span><span></span></span><span class="brand-name">sync<span>sphere</span><small>THE BROWSER LAB</small></span></a>
+      <div class="rail-section-label" data-i18n="navDiscover">DISCOVER</div>
+      <nav class="rail-nav">
+        <a href="#home" class="nav-link current" aria-current="page"><span class="nav-symbol">⌂</span><span data-i18n="overview">Overview</span><span class="nav-arrow">↗</span></a>
+        <a href="#preferences" class="nav-link"><span class="nav-symbol">◈</span><span data-i18n="preferences">Preferences</span></a>
+        <a href="#network" class="nav-link"><span class="nav-symbol">◎</span><span data-i18n="observatory">Live observatory</span><span class="tiny-live"></span></a>
+        <a href="#conflict-lab" class="nav-link"><span class="nav-symbol">⚖</span><span data-i18n="conflictLab">Conflict lab</span></a>
+        <a href="#activity" class="nav-link"><span class="nav-symbol">≋</span><span data-i18n="syncActivity">Activity trail</span></a>
+      </nav>
+      <div class="rail-bottom">
+        <div class="privacy-card"><div class="privacy-symbol">⌁</div><strong data-i18n="localByDesign">Local by design.</strong><p data-i18n="privacyInfo">Settings stay in your browser. No sign-in, server, or tracking.</p><div class="privacy-label"><span class="green-dot"></span><span data-i18n="storageLocal">ON-DEVICE STORAGE</span></div></div>
+        <div class="rail-footer"><span>GDG WILDCARD · V2.0</span><span>© 2026</span></div>
+      </div>
+    </aside>
+
+    <div class="workarea" id="home">
+      <header class="topbar"><div class="crumb"><span data-i18n="workspaceTitle">Workspace</span><span class="crumb-divider">/</span><strong data-i18n="overview">Overview</strong></div><div class="topbar-actions"><span class="pill on"><span class="green-dot"></span><span data-i18n="engineRunning">Engine running</span></span><span class="header-tab" title="Unique ID for this browser tab">TAB <span id="tab-short">…</span></span><span class="avatar">S</span></div></header>
+      <main class="canvas">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-text"><div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="heroEyebrow">GDG TECH / FRONTEND CHALLENGE 01</span></div><h1 id="hero-title"><span data-i18n="heroLine1">One browser.</span><span class="accent-title" data-i18n="heroLine2">Many minds. One state.</span></h1><p data-i18n="heroDescription">A living experiment in keeping multiple tabs perfectly in sync. Make a change, watch it travel, and see how conflicts are resolved.</p><div class="hero-buttons"><button id="open-tab" type="button" class="button primary"><span>↗</span><span data-i18n="openTab">Open another tab</span></button><a href="#conflict-lab" class="button ghost"><span>⚖</span><span data-i18n="exploreLab">Explore the conflict lab</span></a></div></div>
+          <div class="hero-art" aria-hidden="true"><div class="art-orbit orbit-outer"></div><div class="art-orbit orbit-mid"></div><div class="art-orbit orbit-inner"></div><div class="art-core"><span>SS</span><small>SYNC</small></div><span class="art-star star-a">✦</span><span class="art-star star-b">✧</span><span class="art-star star-c">✦</span><span class="orbit-node orbit-node-a"></span><span class="orbit-node orbit-node-b"></span><span class="art-caption">REAL-TIME / LOCAL-FIRST</span></div>
+        </section>
+
+        <section class="metrics" aria-label="Live status">
+          <div class="metric-card"><div class="metric-top"><span data-i18n="tabsDetected">ACTIVE TABS DETECTED</span><span class="metric-icon">◎</span></div><div class="metric-value"><strong id="tab-count">1</strong><span class="metric-suffix" data-i18n="tabsLive">tab online</span></div><div class="metric-bottom" data-i18n="tabCountHelp">Includes this tab · based on recent presence signals</div></div>
+          <div class="metric-card"><div class="metric-top"><span data-i18n="receivedEvents">REMOTE UPDATES RECEIVED</span><span class="metric-icon">↙</span></div><div class="metric-value"><strong id="received-count">0</strong><span class="metric-suffix" data-i18n="updates">updates</span></div><div class="metric-bottom" data-i18n="receivedHelp">Changes received from other open tabs</div></div>
+          <div class="metric-card"><div class="metric-top"><span data-i18n="networkLatency">LATEST NETWORK ROUND TRIP</span><span class="metric-icon">⌁</span></div><div class="metric-value"><strong id="rtt-value">—</strong><span class="metric-suffix">ms</span></div><div class="metric-bottom" id="rtt-caption" data-i18n="rttHelp">Run a ping with at least two tabs</div></div>
+        </section>
+
+        <section class="primary-grid" aria-label="Settings and live network">
+          <div class="panel preference-panel" id="preferences">
+            <div class="panel-heading"><div><span class="section-index">01 / CONTROL</span><h2 data-i18n="displaySettings">Your preferences</h2><p data-i18n="preferencesHelpV2">These settings are shared with every open tab.</p></div><div class="panel-symbol">⚙</div></div>
+            <div class="setting-block"><div class="setting-icon theme-icon">◐</div><div class="setting-detail"><h3 data-i18n="darkMode">Appearance</h3><p data-i18n="darkHelp">Switch between light and dark appearances.</p></div><label class="switch" aria-label="Dark mode"><input id="theme-toggle" type="checkbox" role="switch"><span class="switch-ui"></span></label></div>
+            <div class="setting-block"><div class="setting-icon language-icon">文</div><div class="setting-detail"><label for="language-select" class="setting-title" data-i18n="language">Language</label><p data-i18n="languageHelp">Choose the language of your workspace.</p></div><select id="language-select" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="hi">हिन्दी</option></select></div>
+            <div class="setting-block font-block"><div class="setting-icon font-icon">Aa</div><div class="setting-detail"><label for="font-slider" class="setting-title" data-i18n="fontSize">Font size</label><p data-i18n="fontHelp">Make reading easier with a comfortable text size.</p><div class="slider-line"><span>A</span><input id="font-slider" type="range" min="14" max="22" value="16" step="1" aria-label="Font size in pixels"><span class="large-a">A</span></div></div><span class="font-value" id="font-value">16 px</span></div>
+            <div class="presets"><div class="presets-header"><span data-i18n="presetsTitle">ONE-CLICK MODES</span><span data-i18n="presetsHint">Each setting syncs independently</span></div><div class="preset-buttons"><button class="preset-btn" type="button" data-preset="focus"><span>◐</span><span data-i18n="focusPreset">Deep focus</span></button><button class="preset-btn" type="button" data-preset="calm"><span>☀</span><span data-i18n="calmPreset">Calm mode</span></button><button class="preset-btn" type="button" data-preset="read"><span>Ａ</span><span data-i18n="readPreset">Easy reading</span></button></div></div>
+          </div>
+
+          <div class="panel network-panel" id="network"><div class="panel-heading"><div><span class="section-index">02 / OBSERVE</span><h2 data-i18n="networkTitle">The living network</h2><p data-i18n="networkHelp">Open another tab. Watch it appear in the orbit.</p></div><span class="network-live"><span class="green-dot"></span>LIVE</span></div>
+            <div class="network-stage"><svg id="peer-graph" viewBox="0 0 420 266" role="img" aria-label="This tab and other detected tabs shown as a live network" preserveAspectRatio="xMidYMid meet"><circle cx="210" cy="133" r="85" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 7"/><circle cx="210" cy="133" r="111" fill="none" stroke="currentColor" stroke-opacity=".07" /></svg><span class="graph-corner">LIVE GRAPH / BROWSER</span></div>
+            <div class="network-legend"><span><i class="legend-me"></i><span data-i18n="yourTab">This tab</span></span><span><i class="legend-peer"></i><span data-i18n="otherTab">Other tab</span></span><span id="network-status" class="network-status">Waiting for peers</span></div>
+            <div class="convergence-strip"><div><span class="micro-label" data-i18n="stateSignature">STATE FINGERPRINT</span><strong id="state-fingerprint">--------</strong></div><div class="convergence-text" id="state-alignment">Awaiting another tab</div></div>
+            <div class="network-actions"><div><span class="micro-label" data-i18n="syncMethod">TRANSPORT</span><strong id="transport">BroadcastChannel + storage</strong></div><button id="ping-tabs" type="button" class="button ping-btn">↔ <span data-i18n="pingTabs">Ping open tabs</span></button></div>
+          </div>
+        </section>
+
+        <section class="secondary-grid">
+          <div class="panel lab-panel" id="conflict-lab"><div class="panel-heading"><div><span class="section-index">03 / EXPERIMENT</span><h2 data-i18n="labTitle">The conflict playground</h2><p data-i18n="labSubtitle">What if two tabs change the same setting at exactly the same time?</p></div><span class="safe-label">◈ <span data-i18n="safeSandbox">SAFE SANDBOX</span></span></div>
+            <div class="lab-intro"><span class="lab-led"></span><span data-i18n="labNotice">This simulation uses the real comparison function. It never changes your saved preferences.</span></div>
+            <div class="collision-grid"><div class="proposal"><span class="proposal-label"><span class="proposal-id a">A</span><span data-i18n="tabA">TAB A PROPOSES</span></span><strong><span class="dark-swatch"></span><span data-i18n="darkValue">Dark theme</span></strong><small>counter: 7 · actor: tab-A</small></div><span class="collision-icon">⚡</span><div class="proposal"><span class="proposal-label"><span class="proposal-id b">B</span><span data-i18n="tabB">TAB B PROPOSES</span></span><strong><span class="light-swatch"></span><span data-i18n="lightValue">Light theme</span></strong><small>counter: 7 · actor: tab-B</small></div></div>
+            <div class="lab-actions"><button type="button" class="button primary" id="run-conflict">▶ <span data-i18n="runCollision">Run collision experiment</span></button><span class="lab-formula"><span data-i18n="winnerRule">Winner rule:</span> (counter, actor ID) ↑</span></div>
+            <div id="lab-result" class="lab-result" role="status" aria-live="polite"><div class="lab-empty"><span>⌁</span><span data-i18n="labEmpty">Run the experiment to compare both message arrival orders.</span></div></div>
+          </div>
+
+          <div class="panel diagnostics-panel" id="diagnostics"><div class="panel-heading"><div><span class="section-index">04 / MEASURE</span><h2 data-i18n="measureTitle">Signal diagnostics</h2><p data-i18n="measureSubtitle">Real measurements, no fabricated benchmark numbers.</p></div><span class="panel-symbol">⌁</span></div>
+            <div class="latency-head"><span data-i18n="rttChart">PING ROUND-TRIP HISTORY</span><strong id="rtt-sample-count">0 samples</strong></div><div class="bars" id="rtt-bars" aria-label="Measured ping round-trip times"><div class="bar-empty" data-i18n="waitingData">Open two tabs and press Ping open tabs.</div></div><div class="chart-foot"><span>0 ms</span><span id="max-rtt">Awaiting measurements</span></div>
+            <div class="diagnostic-divider"></div><div class="detail-row"><span data-i18n="oneWay">Observed update transport</span><strong id="latency">—</strong></div><div class="detail-row"><span data-i18n="persistence">Local persistence</span><strong id="persistence">Enabled</strong></div><div class="detail-row"><span data-i18n="conflictsSeen">Real conflicts observed</span><strong id="conflicts">0</strong></div><div class="diagnostic-note" data-i18n="latencyDisclaimer">Ping is round-trip time, not one-way synchronization latency. Browser throttling can affect results.</div>
+          </div>
+        </section>
+
+        <section class="secondary-grid bottom-grid">
+          <div class="panel activity-panel" id="activity"><div class="panel-heading"><div><span class="section-index">05 / REPLAY</span><h2 data-i18n="activityTitle">The activity trail</h2><p data-i18n="activitySubtitle">A human-readable explanation of every important event.</p></div><span class="event-counter" id="event-counter">0 events</span></div><div class="filter-strip" role="group" aria-label="Activity filters"><button class="filter active" data-filter="all" type="button" data-i18n="filterAll">All events</button><button class="filter" data-filter="local" type="button" data-i18n="filterLocal">My changes</button><button class="filter" data-filter="received" type="button" data-i18n="filterReceived">Incoming</button><button class="filter" data-filter="conflict" type="button" data-i18n="filterConflict">Conflicts</button></div><ol id="activity-list" class="event-list" aria-live="polite" aria-relevant="additions text"></ol></div>
+          <div class="side-stack"><div class="panel version-panel"><div class="panel-heading"><div><span class="section-index">06 / EXPLAIN</span><h2 data-i18n="revisionTitle">Why this tab wins</h2><p data-i18n="revisionSubtitle">A revision is stored separately for each setting.</p></div></div><div class="revision-list"><div><span data-i18n="darkMode">Dark mode</span><code id="version-theme">0 · system</code></div><div><span data-i18n="language">Language</span><code id="version-language">0 · system</code></div><div><span data-i18n="fontSize">Font size</span><code id="version-fontSize">0 · system</code></div></div><a class="explain-link" href="./docs/EXPLAIN_LIKE_IM_FIVE.md" target="_blank" rel="noopener"><span data-i18n="readExplainer">Explain this to a beginner</span><span>↗</span></a></div>
+            <div class="panel utility-panel"><div class="panel-heading"><div><span class="section-index">07 / TOOLS</span><h2 data-i18n="quickActions">Your toolkit</h2></div></div><div class="tool-grid"><button id="export-settings" type="button">⇩ <span data-i18n="export">Export JSON</span></button><button id="import-settings" type="button">⇧ <span data-i18n="import">Import JSON</span></button><button id="reset-settings" type="button">↺ <span data-i18n="reset">Reset settings</span></button><button id="copy-tab-id" type="button">⌁ <span data-i18n="copyTabId">Copy tab ID</span></button></div><input id="import-file" type="file" accept="application/json,.json" hidden /></div>
+          </div>
+        </section>
+
+        <div class="explanation-strip"><span class="explain-mark">i</span><div><strong data-i18n="explainStripTitle">Explain it in one sentence</strong><p data-i18n="explainStripText">BroadcastChannel delivers messages, localStorage remembers state, and Lamport counters plus tab IDs settle simultaneous edits deterministically.</p></div><a href="./docs/TECHNICAL_DESIGN.md" target="_blank" rel="noopener"><span data-i18n="technicalDocs">Technical docs</span> ↗</a></div>
+        <footer class="footer"><span>SyncSphere V2 <b>·</b> Built to understand, not just impress.</span><span>TypeScript · No runtime dependencies · Local-first</span></footer>
+      </main>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
