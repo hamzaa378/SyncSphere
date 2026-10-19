@@ -2,6 +2,7 @@ import { SyncEngine } from "./core/sync-engine.js";
 import { simulateConflict } from "./core/conflict-lab.js";
 import { translateUI } from "./i18n.js";
 import { LabNetwork } from "./core/lab-network.js";
+import { RobustnessLab } from "./core/robustness-lab.js";
 import { convergence, makeReport, csvReport } from "./core/reports.js";
 function el(id) {
     const node = document.getElementById(id);
@@ -12,6 +13,8 @@ function el(id) {
 function setText(id, content) { el(id).textContent = content; }
 const engine = new SyncEngine();
 const lab = new LabNetwork(engine.tabId);
+const robustness = new RobustnessLab(engine.tabId);
+let fanoutResult = null;
 let benchmarkResult = null;
 let stressResult = null;
 const convergenceHistory = [];
@@ -164,6 +167,20 @@ function render(snapshot) {
             convergenceHistory.shift();
     }
     setText("convergence-events", `${convergenceHistory.length} convergence state transitions`);
+    setText("repair-checks", String(snapshot.repairChecks));
+    setText("repair-applied", String(snapshot.repairedRegisters));
+    setText("repair-sent", String(snapshot.repairSnapshotsSent));
+    setText("repair-status", snapshot.lastRecovery ?? "No repair necessary or observed in this tab yet.");
+    const health = el("peer-health");
+    health.replaceChildren();
+    if (!snapshot.peers.length)
+        health.textContent = "No peers detected. Open more tabs to see fresh state reports.";
+    for (const peer of snapshot.peers) {
+        const line = document.createElement("div");
+        const age = Math.max(0, Date.now() - peer.lastSeen);
+        line.textContent = `Tab ${peer.id.slice(0, 8)} · last signal ${age} ms ago · ${peer.revision === snapshot.revisionFingerprint ? "revision match" : "checking revisions"}`;
+        health.append(line);
+    }
     const signature = snapshot.peers.map(peer => peer.id).join('|');
     if (signature !== peerSignature) {
         peerSignature = signature;
@@ -431,13 +448,62 @@ el('run-stress').addEventListener('click', async () => {
     }
 });
 el('export-report-json').addEventListener('click', () => {
-    const report = makeReport(engine.snapshot(), convergenceHistory, benchmarkResult, stressResult);
-    reportDownload('syncsphere-v2.1-evidence.json', JSON.stringify(report, null, 2), 'application/json');
+    const report = makeReport(engine.snapshot(), convergenceHistory, benchmarkResult, stressResult, fanoutResult);
+    reportDownload('syncsphere-v2.2-evidence.json', JSON.stringify(report, null, 2), 'application/json');
     toast('Evidence JSON exported, including methodology and raw samples');
 });
 el('export-report-csv').addEventListener('click', () => {
-    reportDownload('syncsphere-v2.1-samples.csv', csvReport(benchmarkResult, stressResult), 'text/csv;charset=utf-8');
+    reportDownload('syncsphere-v2.2-samples.csv', csvReport(benchmarkResult, stressResult, fanoutResult), 'text/csv;charset=utf-8');
     toast('Raw sample CSV exported');
 });
 window.addEventListener('pagehide', event => { if (!event.persisted)
     lab.dispose(); });
+// ===== V2.2 opt-in fault injection and peer-repair controls ====================
+const fanoutButton = el('run-fanout');
+fanoutButton.addEventListener('click', async () => {
+    const peerIds = engine.snapshot().peers.map(peer => peer.id);
+    if (!peerIds.length)
+        return toast('Open another tab first. Three or more tabs are ideal.');
+    if (!robustness.available)
+        return toast('BroadcastChannel is unavailable.');
+    const mode = el('fault-mode').value;
+    fanoutResult = null;
+    fanoutButton.disabled = true;
+    el('cancel-fanout').disabled = false;
+    el('fault-mode').disabled = true;
+    const total = peerIds.length * 12;
+    setText('fanout-success', '—');
+    setText('fanout-recovered', '—');
+    setText('fanout-failed', '—');
+    setText('fanout-status', `Running ${mode} against ${peerIds.length} peers · ${total} deliveries planned…`);
+    try {
+        const result = await robustness.fanout(peerIds, mode, 12, (done, requested) => {
+            setText('fanout-status', `Checking ${done}/${requested} targeted deliveries · ${mode}`);
+        });
+        fanoutResult = result;
+        setText('fanout-success', `${result.successful}/${total}`);
+        setText('fanout-recovered', String(result.recovered));
+        setText('fanout-failed', String(result.failed));
+        setText('fanout-status', `${result.failed ? 'CHECK FAILURES' : 'PASS'} · ${result.successful}/${total} received ACKs · ${result.recovered} recovered · RTT P95 ${statText(result.rttStats.p95)}${result.cancelled ? ' · Cancelled' : ''}`);
+        const trace = el('fanout-trace');
+        trace.replaceChildren();
+        for (const sample of result.samples.slice(-48)) {
+            const line = document.createElement('div');
+            line.textContent = `#${sample.sequence} ${sample.peer.slice(0, 8)} ${sample.success ? '✓' : '✕'} · ${sample.attempts} attempt(s) · ${sample.ackRttMs === null ? 'timed out' : `${sample.ackRttMs.toFixed(1)} ms`}`;
+            trace.append(line);
+        }
+        toast('Resilience report ready. Export JSON and CSV as evidence.');
+    }
+    catch (error) {
+        setText('fanout-status', error instanceof Error ? error.message : 'Unable to run experiment');
+    }
+    finally {
+        fanoutButton.disabled = false;
+        el('cancel-fanout').disabled = true;
+        el('fault-mode').disabled = false;
+    }
+});
+el('cancel-fanout').addEventListener('click', () => { robustness.cancel(); toast('Stopping after current attempt'); });
+el('request-repair').addEventListener('click', () => { engine.requestRepair(); toast('Requested fresh revisions from visible tabs'); });
+window.addEventListener('pagehide', event => { if (!event.persisted)
+    robustness.dispose(); });

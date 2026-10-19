@@ -1568,3 +1568,10 @@ select {
 .experiment-section .button.primary{background:#16734e;color:#fff}
 .experiment-section .button.primary:hover{background:#1b9162}
 .experiment-section button:focus-visible,.lab-select:focus-visible{outline:3px solid #6fb998;outline-offset:3px}
+
+/* V2.2 retains V2's palette while making failure evidence legible. */
+.v22-grid{margin-top:19px}.v22-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v22-kpis strong{font-size:clamp(.9rem,1.6vw,1.25rem)}
+.v22-grid .stress-trace{min-height:92px;max-height:180px}
+.v22-grid .experiment-status{overflow-wrap:anywhere}
+@media(max-width:570px){.v22-kpis span{font-size:.55rem}.v22-grid .lab-buttons{flex-direction:column;align-items:stretch}}

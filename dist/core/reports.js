@@ -20,10 +20,10 @@ export function convergence(snapshot) {
         return { state: 'diverged', detail: `Temporary disagreement in ${difference.length} tab(s): ${difference.join('; ')}. Anti-entropy will check storage.`, disagreement: difference };
     return { state: 'converged', detail: `All ${snapshot.peers.length + 1} reported full preference registers match.`, disagreement: [] };
 }
-export function makeReport(snapshot, history, benchmark, stress) {
+export function makeReport(snapshot, history, benchmark, stress, fanout = null) {
     const view = convergence(snapshot);
     return {
-        schema: 'syncsphere-lab-report/1.0', application: 'SyncSphere v2.1', exportedAt: new Date().toISOString(),
+        schema: 'syncsphere-lab-report/2.0', application: 'SyncSphere v2.2', exportedAt: new Date().toISOString(),
         context: { userAgent: navigator.userAgent, activePeerCount: snapshot.peers.length,
             transport: snapshot.transport, persistent: snapshot.persistent, tabId: snapshot.tabId },
         methodology: {
@@ -32,17 +32,21 @@ export function makeReport(snapshot, history, benchmark, stress) {
             rtt: 'Source tab performance.now elapsed until acknowledgment was received; includes reply handling.',
             p95: 'Nearest-rank 95th percentile of successful samples; failures and timeouts reported separately.',
             stress: 'Independent equal-counter conflicting proposals created in two real tabs before observing one another; both apply the same Lamport counter/tab ID comparator. Isolated from saved preferences.',
-            caveats: 'Visible/background throttling, device scheduling, multiple peers, and browser security restrictions affect results. Report only represents the machine and session in which it was collected.',
+            fanout: 'All selected live peers receive separate isolated test-register messages. First-attempt drops and delayed acknowledgments are injected on the receiving tab, not in production preference traffic. Every targeted message is counted; retries are recorded.',
+            recovery: 'Production peer presence advertises complete stamped registers. Newer valid remote stamps are merged; lagging peers receive throttled directed snapshots. The recovery journal counts observations and repairs, not guaranteed durable consensus.',
+            caveats: 'Visible/background throttling, device scheduling, multiple peers, and browser security restrictions affect results. Report only represents the machine and session in which it was collected. Fault-injected RTT includes intentional delay and retry timeout and must not be mixed into the normal 100ms performance benchmark.',
         },
         diagnostics: { sentUpdates: snapshot.sentUpdates, receivedUpdates: snapshot.receivedUpdates,
             lastPreferenceDeliveryApproxMs: snapshot.latencyMs.at(-1) ?? null,
-            pingRttMs: snapshot.roundTripsMs, conflictsObservedByMainEngine: snapshot.conflictCount },
+            pingRttMs: snapshot.roundTripsMs, conflictsObservedByMainEngine: snapshot.conflictCount,
+            repairChecks: snapshot.repairChecks, repairedRegisters: snapshot.repairedRegisters,
+            repairSnapshotsSent: snapshot.repairSnapshotsSent, lastRecovery: snapshot.lastRecovery },
         convergence: { ...view, fingerprint: snapshot.localFingerprint,
-            revisionFingerprint: snapshot.revisionFingerprint, history }, benchmark, stress,
+            revisionFingerprint: snapshot.revisionFingerprint, history }, benchmark, stress, fanout,
     };
 }
-export function csvReport(benchmark, stress) {
-    const headings = ['test', 'run_id', 'trial', 'target_peer', 'delivery_ms', 'ack_rtt_ms', 'success', 'local_winner', 'remote_winner', 'expected_winner', 'reason'];
+export function csvReport(benchmark, stress, fanout = null) {
+    const headings = ['test', 'run_id', 'trial', 'target_peer', 'delivery_ms', 'ack_rtt_ms', 'success', 'local_winner', 'remote_winner', 'expected_winner', 'reason', 'attempts', 'recovered', 'fault_mode'];
     const rows = [headings];
     if (benchmark)
         for (const s of benchmark.samples)
@@ -51,5 +55,8 @@ export function csvReport(benchmark, stress) {
         for (const t of stress.trials)
             rows.push(['conflict', stress.id, t.sequence, stress.targetPeer, '', t.elapsedMs, t.converged,
                 t.localWinner, t.remoteWinner ?? '', t.expectedWinner, t.reason]);
-    return rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n') + '\r\n';
+    if (fanout)
+        for (const s of fanout.samples)
+            rows.push(['fanout', fanout.id, s.sequence, s.peer, '', s.ackRttMs ?? '', s.success, '', '', '', s.reason, s.attempts, s.recovered, fanout.mode]);
+    return rows.map(row => [...row, ...Array(Math.max(0, headings.length - row.length)).fill('')].map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n') + '\r\n';
 }

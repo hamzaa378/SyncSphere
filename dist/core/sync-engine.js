@@ -26,6 +26,11 @@ export class SyncEngine {
     channel = null;
     persistent = storageAvailable();
     intervalId;
+    repairChecks = 0;
+    repairedRegisters = 0;
+    repairSnapshotsSent = 0;
+    lastRecovery = null;
+    lastRepairToPeer = new Map();
     constructor() {
         if (typeof BroadcastChannel !== "undefined") {
             try {
@@ -55,8 +60,12 @@ export class SyncEngine {
                     removed = true;
                 }
             }
-            if (removed)
+            if (removed) {
+                for (const key of [...this.lastRepairToPeer.keys()])
+                    if (!this.peers.has(key))
+                        this.lastRepairToPeer.delete(key);
                 this.notify();
+            }
         }, 2500);
         this.log("system", "Tab is ready. Saved preferences restored.");
         this.send({ type: "HELLO", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
@@ -97,7 +106,20 @@ export class SyncEngine {
             tabId: this.tabId,
             transport: this.channel ? "BroadcastChannel + storage" : "storage events only",
             persistent: this.persistent,
+            repairChecks: this.repairChecks,
+            repairedRegisters: this.repairedRegisters,
+            repairSnapshotsSent: this.repairSnapshotsSent,
+            lastRecovery: this.lastRecovery,
         };
+    }
+    /** Force a fresh storage read and ask each visible peer to re-exchange registers. */
+    requestRepair() {
+        this.repairChecks++;
+        this.refreshFromStorage();
+        this.send({ type: "HELLO", sender: this.tabId, sentAt: Date.now(),
+            fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
+        this.reportState();
+        this.log("system", "Manual consistency check requested from all open tabs.");
     }
     set(key, value) {
         if (!validValue(key, value))
@@ -201,11 +223,41 @@ export class SyncEngine {
         }
         catch { /* storage events remain a fallback */ }
     }
+    /** Merge only validated newer registers; send a bounded repair snapshot for stale peers. */
+    reconcilePeer(peerId, incoming) {
+        this.repairChecks++;
+        let peerBehind = false;
+        for (const key of KEYS) {
+            const next = parseRegister(key, incoming[key]);
+            if (!next)
+                continue;
+            const relation = compareStamp(next.stamp, this.records[key].stamp);
+            if (relation > 0) {
+                this.repairedRegisters++;
+                this.lastRecovery = `${key}: adopted a newer version from ${peerId.slice(0, 8)}`;
+                this.accept(key, next, "peer anti-entropy");
+            }
+            else if (relation < 0)
+                peerBehind = true;
+        }
+        if (peerBehind) {
+            const last = this.lastRepairToPeer.get(peerId) ?? 0;
+            if (Date.now() - last >= 1200) {
+                this.lastRepairToPeer.set(peerId, Date.now());
+                this.repairSnapshotsSent++;
+                this.send({ type: "SNAPSHOT", sender: this.tabId, to: peerId,
+                    sentAt: Date.now(), records: this.records });
+            }
+        }
+    }
     receive(data) {
         if (data === null || typeof data !== "object")
             return;
         const message = data;
         if (typeof message.sender !== "string" || message.sender === this.tabId || message.sender.length > 100)
+            return;
+        // Ignore unrelated experimental traffic: only the production protocol can alter peer state.
+        if (typeof message.type !== "string" || !["HELLO", "PRESENCE", "GOODBYE", "PING", "PONG", "SNAPSHOT", "UPDATE"].includes(message.type))
             return;
         const wasKnown = this.peers.has(message.sender);
         const previous = this.peers.get(message.sender);
@@ -229,8 +281,11 @@ export class SyncEngine {
             this.log("system", `Tab ${message.sender} left the network.`);
             return;
         }
-        if (message.type === "PRESENCE")
+        if (message.type === "PRESENCE") {
+            if (peerRecords)
+                this.reconcilePeer(message.sender, peerRecords);
             return;
+        }
         if (message.type === "PING") {
             if (typeof message.requestId === "string" && message.requestId.length < 150)
                 this.send({ type: "PONG", sender: this.tabId, sentAt: Date.now(), requestId: message.requestId });
@@ -252,6 +307,8 @@ export class SyncEngine {
             return;
         }
         if (message.type === "HELLO") {
+            if (peerRecords)
+                this.reconcilePeer(message.sender, peerRecords);
             this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
             this.send({ type: "SNAPSHOT", sender: this.tabId, sentAt: Date.now(), records: this.records });
             return;
@@ -272,11 +329,17 @@ export class SyncEngine {
                 this.notify();
             }
         }
-        if (message.type === "SNAPSHOT" && message.records && typeof message.records === "object") {
+        if (message.type === "SNAPSHOT" && message.records && typeof message.records === "object"
+            && (!message.to || message.to === this.tabId)) {
             for (const key of KEYS) {
                 const candidate = parseRegister(key, message.records[key]);
-                if (candidate)
+                if (candidate) {
+                    if (compareStamp(candidate.stamp, this.records[key].stamp) > 0) {
+                        this.repairedRegisters++;
+                        this.lastRecovery = `${key}: refreshed from snapshot sent by ${message.sender.slice(0, 8)}`;
+                    }
                     this.accept(key, candidate, "another tab's snapshot");
+                }
             }
         }
     }

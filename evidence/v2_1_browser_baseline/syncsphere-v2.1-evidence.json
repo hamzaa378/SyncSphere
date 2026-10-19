@@ -1,0 +1,1086 @@
+{
+  "schema": "syncsphere-lab-report/1.0",
+  "application": "SyncSphere v2.1",
+  "exportedAt": "2026-10-19T11:43:52.796Z",
+  "context": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "activePeerCount": 1,
+    "transport": "BroadcastChannel + storage",
+    "persistent": true,
+    "tabId": "773cb3f3"
+  },
+  "methodology": {
+    "benchmark": "100 isolated consecutive versioned register updates between two real tabs, each confirmed by an acknowledgment over the production BroadcastChannel. Does not modify actual preferences.",
+    "delivery": "Approximate one-way event-loop delivery: receiver(performance.timeOrigin + performance.now) minus sender equivalent. Same device/time origin; not guaranteed network-grade synchronization timing.",
+    "rtt": "Source tab performance.now elapsed until acknowledgment was received; includes reply handling.",
+    "p95": "Nearest-rank 95th percentile of successful samples; failures and timeouts reported separately.",
+    "stress": "Independent equal-counter conflicting proposals created in two real tabs before observing one another; both apply the same Lamport counter/tab ID comparator. Isolated from saved preferences.",
+    "caveats": "Visible/background throttling, device scheduling, multiple peers, and browser security restrictions affect results. Report only represents the machine and session in which it was collected."
+  },
+  "diagnostics": {
+    "sentUpdates": 3,
+    "receivedUpdates": 1,
+    "lastPreferenceDeliveryApproxMs": 3,
+    "pingRttMs": [],
+    "conflictsObservedByMainEngine": 0
+  },
+  "convergence": {
+    "state": "converged",
+    "detail": "All 2 reported full preference registers match.",
+    "disagreement": [],
+    "fingerprint": "742F6CB9",
+    "revisionFingerprint": "6A3C8E4C",
+    "history": [
+      {
+        "at": "2026-10-19T11:42:27.486Z",
+        "state": "alone",
+        "detail": "Open another tab to monitor consistency.",
+        "peers": 0
+      },
+      {
+        "at": "2026-10-19T11:42:27.495Z",
+        "state": "converged",
+        "detail": "All 2 reported full preference registers match.",
+        "peers": 1
+      },
+      {
+        "at": "2026-10-19T11:42:32.779Z",
+        "state": "alone",
+        "detail": "Open another tab to monitor consistency.",
+        "peers": 0
+      },
+      {
+        "at": "2026-10-19T11:42:48.638Z",
+        "state": "converged",
+        "detail": "All 2 reported full preference registers match.",
+        "peers": 1
+      },
+      {
+        "at": "2026-10-19T11:43:33.498Z",
+        "state": "diverged",
+        "detail": "Temporary disagreement in 1 tab(s): ed2aa278: theme. Anti-entropy will check storage.",
+        "peers": 1
+      },
+      {
+        "at": "2026-10-19T11:43:33.502Z",
+        "state": "converged",
+        "detail": "All 2 reported full preference registers match.",
+        "peers": 1
+      }
+    ]
+  },
+  "benchmark": {
+    "id": "lab-1792410183569-zwcj27rw",
+    "startedAt": "2026-10-19T11:43:03.569Z",
+    "finishedAt": "2026-10-19T11:43:04.050Z",
+    "targetPeer": "ed2aa278",
+    "requested": 100,
+    "samples": [
+      {
+        "sequence": 1,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.3,
+        "acknowledgementMs": 6.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 2,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 2.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 3,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 4,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.5,
+        "acknowledgementMs": 4.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 5,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.4,
+        "acknowledgementMs": 5.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 6,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 5.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 7,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 5.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 8,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 5.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 9,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 10,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 5.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 11,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 2.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 12,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 5.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 13,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 4.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 14,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 15,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 16,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 17,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 18,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 19,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 3.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 20,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 21,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 2.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 22,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 23,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.3,
+        "acknowledgementMs": 5.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 24,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 5.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 25,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 4.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 26,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 5.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 27,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 5.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 28,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 5.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 29,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 4.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 30,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 5.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 31,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 3.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 32,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 3.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 33,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 2.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 34,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 35,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 4.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 36,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 37,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 38,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 39,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 40,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 41,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 3.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 42,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 43,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 2.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 44,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 45,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 46,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 3.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 47,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 48,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.4,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 49,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.6,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 50,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 51,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 2.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 52,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 53,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 54,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 5.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 55,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 5.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 56,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 3.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 57,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 5.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 58,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 5.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 59,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 6.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 60,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 6.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 61,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 62,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 4.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 63,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 6.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 64,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 5.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 65,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 6.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 66,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 7.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 67,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 5.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 68,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 69,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.5,
+        "acknowledgementMs": 5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 70,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 5.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 71,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.4,
+        "acknowledgementMs": 6.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 72,
+        "peer": "ed2aa278",
+        "deliveryMs": 2.1,
+        "acknowledgementMs": 5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 73,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 74,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 75,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 76,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 77,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.7,
+        "acknowledgementMs": 4.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 78,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 79,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 4.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 80,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 81,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 2.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 82,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 3.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 83,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 2.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 84,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.2,
+        "acknowledgementMs": 4.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 85,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 86,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 2.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 87,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 88,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.7,
+        "acknowledgementMs": 2.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 89,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.8,
+        "acknowledgementMs": 4.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 90,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 91,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 2.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 92,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.3,
+        "acknowledgementMs": 5.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 93,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 94,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 4.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 95,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 4.8,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 96,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.8,
+        "acknowledgementMs": 3.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 97,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 5.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 98,
+        "peer": "ed2aa278",
+        "deliveryMs": 1.8,
+        "acknowledgementMs": 7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 99,
+        "peer": "ed2aa278",
+        "deliveryMs": 1,
+        "acknowledgementMs": 5.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 100,
+        "peer": "ed2aa278",
+        "deliveryMs": 0.9,
+        "acknowledgementMs": 3.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      }
+    ],
+    "deliveryStats": {
+      "count": 100,
+      "average": 0.954,
+      "median": 0.9,
+      "p95": 1.5,
+      "maximum": 2.1
+    },
+    "rttStats": {
+      "count": 100,
+      "average": 4.418,
+      "median": 4.6,
+      "p95": 6.3,
+      "maximum": 7.7
+    },
+    "achievedUnder100ms": 100
+  },
+  "stress": {
+    "id": "lab-1792410198512-2183vyl9",
+    "startedAt": "2026-10-19T11:43:18.512Z",
+    "finishedAt": "2026-10-19T11:43:18.739Z",
+    "targetPeer": "ed2aa278",
+    "requested": 20,
+    "trials": [
+      {
+        "sequence": 1,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 2,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 9,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 3,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 16,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 4,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 11.2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 5,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 16.5,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 6,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 7.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 7,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8.2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 8,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 12.2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 9,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8.3,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 10,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 12.2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 11,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 7.7,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 12,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 11.7,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 13,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 14.5,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 14,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 11.9,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 15,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 12.1,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 16,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 11.4,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 17,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 18,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8.4,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 19,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 10.1,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 20,
+        "localWinner": "ed2aa278",
+        "remoteWinner": "ed2aa278",
+        "expectedWinner": "ed2aa278",
+        "converged": true,
+        "elapsedMs": 8.4,
+        "reason": "Verified in both tabs"
+      }
+    ],
+    "converged": 20
+  }
+}

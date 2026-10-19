@@ -84,3 +84,33 @@ test('multi-tab changes, independent keys, conflict convergence, and persisted r
     } finally { c.dispose(); }
   } finally { a.dispose(); b.dispose(); }
 });
+
+test('v2.2 peer presence anti-entropy adopts newer stamped state and persists it', async () => {
+  localStorage.clear();
+  const engine = new SyncEngine();
+  const remote = new BroadcastChannel('syncsphere:changes:v1');
+  try {
+    const incoming = structuredClone(engine.snapshot().records);
+    incoming.theme = { value: 'dark', stamp: { counter: 1000, actor: 'remote-repair-demo' } };
+    remote.postMessage({type: 'PRESENCE', sender: 'remote-repair-demo', sentAt: Date.now(),
+      fingerprint: '00000000', revision: '00000000', records: incoming });
+    await until(() => engine.snapshot().preferences.theme === 'dark', 'newer version not adopted');
+    assert.ok(engine.snapshot().repairedRegisters >= 1);
+    assert.deepEqual(JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'theme')), incoming.theme);
+    const reopened = new SyncEngine();
+    try { assert.equal(reopened.snapshot().preferences.theme, 'dark'); }
+    finally { reopened.dispose(); }
+  } finally { remote.close(); engine.dispose(); }
+});
+
+test('unrelated robustness traffic cannot create a phantom production peer', async () => {
+  localStorage.clear();
+  const engine = new SyncEngine();
+  const remote = new BroadcastChannel('syncsphere:changes:v1');
+  try {
+    remote.postMessage({type: 'ROBUST_UPDATE', sender:'pretend-actor',to:engine.tabId,
+      run:'robust-1000000-example',sequence:1,attempt:1,fault:'normal',value:3});
+    await delay(30);
+    assert.equal(engine.snapshot().peers.length, 0);
+  } finally { remote.close(); engine.dispose(); }
+});

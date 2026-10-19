@@ -1,9 +1,9 @@
 {
   "name": "gdg-syncsphere-frontend-task-1",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
-  "description": "GDG Tech Wildcard Entry — Multi-Tab Settings Synchronization",
+  "description": "GDG Tech Wildcard Entry \u2014 Multi-Tab Settings Synchronization",
   "scripts": {
     "dev": "npm run build && node scripts/dev-server.mjs",
     "start": "node scripts/dev-server.mjs",
@@ -11,7 +11,8 @@
     "watch": "tsc -p tsconfig.json --watch",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:e2e": "python tests/browser_e2e.py",
-    "test:e2e:v21": "python tests/browser_v21.py"
+    "test:e2e:v21": "python tests/browser_v21.py",
+    "test:e2e:v22": "python tests/browser_v22.py"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

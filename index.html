@@ -32,7 +32,7 @@
         <a href="#preferences" class="nav-link"><span class="nav-symbol">◈</span><span data-i18n="preferences">Preferences</span></a>
         <a href="#network" class="nav-link"><span class="nav-symbol">◎</span><span data-i18n="observatory">Live observatory</span><span class="tiny-live"></span></a>
         <a href="#conflict-lab" class="nav-link"><span class="nav-symbol">⚖</span><span data-i18n="conflictLab">Conflict lab</span></a>
-        <a href="#engineering-lab" class="nav-link"><span class="nav-symbol">▥</span><span>Reliability lab</span></a>
+        <a href="#engineering-lab" class="nav-link"><span class="nav-symbol">▥</span><span>Reliability lab V2.2</span></a>
         <a href="#activity" class="nav-link"><span class="nav-symbol">≋</span><span data-i18n="syncActivity">Activity trail</span></a>
       </nav>
       <div class="rail-bottom">
@@ -98,7 +98,7 @@
 
 
         <section class="experiment-section" id="engineering-lab" aria-label="Cross-tab reliability testing">
-          <div class="experiment-heading"><div><span class="section-index">08 / RESEARCH LAB</span><h2>Reliability test bench</h2><p>Real-tab experiments with measurable results. The test values stay separate from your saved preferences.</p></div><span class="research-pill">◉ VERIFIED SAMPLES ONLY</span></div>
+          <div class="experiment-heading"><div><span class="section-index">08 / RESEARCH LAB</span><h2>Reliability and recovery lab</h2><p>Measure real tabs, inject controlled transport failures, and examine state repair. Your saved settings are protected.</p></div><span class="research-pill">◉ VERIFIED SAMPLES ONLY</span></div>
           <div class="experiment-grid">
             <article class="panel test-bench-panel">
               <div class="experiment-top"><span class="micro-label">A / DELIVERY PERFORMANCE</span><span class="tiny-counter">100 sequential updates</span></div>
@@ -124,14 +124,42 @@
               <p class="fine-print">Uses the production Lamport comparator, actual cross-tab messages and an isolated test register. Real user preferences are untouched.</p>
             </article>
           </div>
+          <div class="experiment-grid v22-grid">
+            <article class="panel test-bench-panel">
+              <div class="experiment-top"><span class="micro-label">C / MULTI-TAB & FAILURE INJECTION</span><span class="tiny-counter">Real tab ACKs</span></div>
+              <h3>Fault-tolerant fan-out</h3>
+              <p>Send isolated updates to every detected peer. Compare ordinary delivery, a deliberately dropped first attempt, 150 ms processing delays, or mixed faults.</p>
+              <label for="fault-mode" class="lab-label">Failure scenario</label>
+              <select id="fault-mode" class="lab-select">
+                <option value="normal">Normal transport · 12 updates per peer</option>
+                <option value="drop-first">Drop first attempt · retry test</option>
+                <option value="delay-150">Delay acknowledgment by 150 ms</option>
+                <option value="mixed">Mixed drops and delays</option>
+              </select>
+              <div class="lab-buttons"><button id="run-fanout" class="button primary" type="button">▶ Test all detected tabs</button><button id="cancel-fanout" class="button ghost small" type="button" disabled>Cancel</button></div>
+              <div class="experiment-status" id="fanout-status" role="status">Open 2–5 tabs to get started. Closing one during the run should be reported as a failure.</div>
+              <div class="stress-kpis v22-kpis"><div><span>Acknowledged</span><strong id="fanout-success">—</strong></div><div><span>Recovered after retry</span><strong id="fanout-recovered">—</strong></div><div><span>Failed / incomplete</span><strong id="fanout-failed">—</strong></div></div>
+              <div id="fanout-trace" class="stress-trace" aria-live="polite">Per-tab results will appear here.</div>
+              <p class="fine-print">Faults are opt-in and affect only the disposable ROBUST_UPDATE test channel messages. They never delay or discard personal settings changes.</p>
+            </article>
+            <article class="panel test-bench-panel">
+              <div class="experiment-top"><span class="micro-label">D / ANTI-ENTROPY MONITOR</span><span class="tiny-counter">Live register diagnostics</span></div>
+              <h3>Recovery journal</h3><p>See how often tabs compare state, adopt newer settings revisions, and send repair snapshots. Run a manual full-state check after suspending or reopening a tab.</p>
+              <div class="stress-kpis v22-kpis"><div><span>State checks</span><strong id="repair-checks">0</strong></div><div><span>Registers repaired</span><strong id="repair-applied">0</strong></div><div><span>Repair snapshots sent</span><strong id="repair-sent">0</strong></div></div>
+              <div class="experiment-status" id="repair-status" role="status">No recovery observed yet.</div>
+              <div id="peer-health" class="stress-trace">Waiting for other tabs.</div>
+              <div class="lab-buttons"><button id="request-repair" class="button primary" type="button">↻ Verify and reconcile now</button></div>
+              <p class="fine-print">A zero repair count is normal when all peers are already consistent. A state check is not proof a repair was needed.</p>
+            </article>
+          </div>
           <div class="panel report-panel">
-            <div><span class="micro-label">C / PROOF & EXPORT</span><h3>Convergence and evidence</h3><p id="convergence-long">State history starts when another tab is detected.</p><div class="report-meta"><span id="convergence-events">No state transitions recorded</span><span id="report-samples">No benchmark report yet</span></div></div>
+            <div><span class="micro-label">E / PROOF & EXPORT</span><h3>Convergence and evidence</h3><p id="convergence-long">State history starts when another tab is detected.</p><div class="report-meta"><span id="convergence-events">No state transitions recorded</span><span id="report-samples">No benchmark report yet</span></div></div>
             <div class="report-actions"><button type="button" class="button primary" id="export-report-json">↓ Export JSON</button><button type="button" class="button ghost" id="export-report-csv">↓ Export CSV</button></div>
           </div>
         </section>
 
         <div class="explanation-strip"><span class="explain-mark">i</span><div><strong data-i18n="explainStripTitle">Explain it in one sentence</strong><p data-i18n="explainStripText">BroadcastChannel delivers messages, localStorage remembers state, and Lamport counters plus tab IDs settle simultaneous edits deterministically.</p></div><a href="./docs/TECHNICAL_DESIGN.md" target="_blank" rel="noopener"><span data-i18n="technicalDocs">Technical docs</span> ↗</a></div>
-        <footer class="footer"><span>SyncSphere V2.1 <b>·</b> Built to understand, not just impress.</span><span>TypeScript · No runtime dependencies · Local-first</span></footer>
+        <footer class="footer"><span>SyncSphere V2.2 <b>·</b> Built to understand, not just impress.</span><span>TypeScript · No runtime dependencies · Local-first</span></footer>
       </main>
     </div>
   </div>

@@ -1,192 +1,134 @@
-# SyncSphere V2 — The Sync Observatory
+# SyncSphere V2.2 — The Browser Reliability Lab
 
-**GDG Tech Wildcard Entry · Frontend Task 1 · TypeScript**
+**GDG Tech Wildcard Entry | Frontend Task 1 | TypeScript**
 
-SyncSphere is a local-first settings application that **synchronizes preferences across browser tabs**. V2 turns the specification into an observable experiment: you can see open tabs appear, watch preferences propagate, measure ping round trips, and explore conflict resolution without changing real settings.
+A local-first multi-tab settings app that makes browser synchronization **observable, testable and recoverable**. Unlike a basic theme toggle, SyncSphere exposes active peers, per-setting version stamps, conflict resolution, latency measurements, a real-tab stress bench, recoveries after artificial message loss, and downloadable evidence. No frontend framework, remote server, database, user account, tracking, or runtime dependencies.
 
-No React, backend, cloud database, login, accounts, analytics or external image/font libraries. Only TypeScript, HTML, CSS, localStorage and BroadcastChannel.
+> **Core scope:** preferences synchronize between tabs in the **same browser profile and origin**. This is not multi-device synchronization. Test messages never modify actual preferences. V2.1 reports bundled below are real data from a prior V2.1 browser run; **V2.2 browser performance has not been measured in this environment**.
 
-> **Important:** Real-time target from the challenge is **under 100 ms** for synchronization. This is a target, not a measured V2 guarantee. Automated logic tests pass; true browser performance needs the browser test and representative measurements on your own machine.
+## Start in less than a minute
 
-## 1. Quick start (Windows, macOS, Linux)
-
-Requirements: Node.js 18 or newer; a recent Chromium, Edge, Firefox or other browser supporting modern web APIs.
-
-This ZIP includes the compiled `dist/` files, so you can run it immediately after extraction:
+Requirements: Node.js 18+, recent Chrome/Brave/Edge/Firefox. From the extracted directory:
 
 ```powershell
-cd GDG_SyncSphere_Frontend_Task1_V2
 npm start
 ```
 
-Visit **http://localhost:5173**. Do not double-click `index.html`; use `npm start` so scripts run under a normal browser origin.
-
-To work on the TypeScript source (requires the TypeScript dev dependency):
+Open **http://localhost:5173** in **three tabs** for the new multi-peer tests. The `dist/` folder ships precompiled, so `npm start` doesn't require npm installation. To edit source and run tests:
 
 ```powershell
 npm install
 npm run build
-npm run dev
-```
-
-Run automated tests:
-
-```powershell
 npm test
 ```
 
-Run browser tests with the server running in a separate terminal:
+The CLI uses a lightweight static server, not a sync backend. Avoid double-clicking `index.html` as `file://` origins behave differently.
+
+For real Chromium E2E (run with the server already started):
 
 ```powershell
 python -m pip install playwright
 python -m playwright install chromium
-python tests/browser_e2e.py
+python tests/browser_v22.py
 ```
 
-The `python` and Playwright commands are only needed for the optional real-browser end-to-end suite. See `docs/TEST_REPORT_V2.md` for what has actually been verified.
+If port 5173 is occupied, on PowerShell set `$env:PORT = 5183` before `npm start`, and pass `http://localhost:5183` to the test script.
 
-## 2. What you can demonstrate
+## Show a GDG evaluator
 
-| Feature | Why it matters | How to try |
+| Interaction | What it proves | Caveat |
 | --- | --- | --- |
-| Dark mode, language, text size | Required preferences | Change a control |
-| Instant cross-tab updates | Required fast synchronization | Open 2 tabs, edit in either |
-| Persistence + early theme bootstrap | Required reopen behavior and no theme flash | Close/reopen all tabs |
-| Deterministic conflict resolution | Required eventual convergence | Read revisions or run sandbox |
-| **Live network constellation** | Visualizes who is connected | Open/close tabs |
-| **Convergence fingerprint** | Compares peers' last reported preference values | Check matching signatures after edits |
-| **Ping diagnostics chart** | Captures real same-browser message RTT | Click **Ping open tabs** |
-| **Isolated conflict playground** | Shows both message orders converging | Click **Run collision experiment** |
-| Three presets | Practical user-facing productivity | Try Deep focus / Calm / Easy reading |
-| Activity filters | Makes remote events explainable | Filter changes or conflicts |
-| Import/export/reset | Useful control over preferences | Use Your toolkit |
-| Responsive layouts | Small-screen usability | Resize browser |
+| Change theme, language or font in any tab | Required live preference synchronization | Same origin/profile only |
+| Close all tabs and reopen | Versioned persistence and theme initialization | Storage must be enabled |
+| Ping tabs | Round-trip timing | RTT is not one-way latency |
+| Run **100 updates** | Real-tab isolated ACK benchmark, averages/median/P95/max | Does not exercise DOM redraw or persistent settings writes |
+| Run **20 collisions** | Deterministic equal-counter conflicts in real tabs | One pair/one winning actor in each run |
+| Run **Test all detected tabs** in `normal` mode | Every chosen peer ACKs 12 messages | Peers must have V2.2 open |
+| Choose **Drop first attempt** | Controlled loss, retry and recovery accounting | Intentional lab fault, not normal delivery performance |
+| Choose **Delay 150 ms** | Timeout/latency diagnostics under injected lag | Not a real browser slowdown |
+| Choose **Mixed** | Alternating drops and processing delay | Results are fault-injected RTT |
+| Close a tab during the fan-out run | Lost peers produce explicit failed attempts | Can require up to the configured timeout |
+| Click **Verify and reconcile now** | Request full-state anti-entropy and inspect journal | A check doesn't imply actual repair was needed |
+| Download JSON & CSV | Raw evidence, methods, test IDs, failures | Collect on the same version in all tabs |
 
-### Scope and compatibility
+### V2.2 changes over V2.1
 
-Tabs must share a compatible **origin, browser profile and storage partition**. This is not cross-device account synchronization. V2 continues using V1 storage keys (`syncsphere:prefs:v1:*`), so your V1 preferences are preserved on the same origin. V1 and V2 messaging is only partially interoperable; the live V2 presence/RTT features require V2 in both tabs.
+1. **Fan-out resilience lab** delivers a set of isolated versioned updates to every detected tab (recommended 3–5 tabs). Unique run IDs and target IDs keep ACKs attributable.
+2. **Fault injection** covers dropped first attempts, 150 ms delayed ACKs, retry recovery, failure on tab disconnect and cancellation. Retries are bounded (two attempts), not an infinite loop.
+3. **Anti-entropy repair** now merges a newer validated per-setting register learned through HELLO/PRESENCE, or sends a *targeted, throttled* SNAPSHOT to a lagging tab. A manual verification control requests fresh state reports.
+4. **Recovery journal** exposes state checks, accepted repairs, repair snapshots, most recent recovery reason and freshness of detected peers.
+5. **Evidence schema 2.0** adds the full fan-out sample set, injected scenario, attempts, recovered statuses, report context and explicit methodology. The original 100-update baseline and 20-conflict tests remain intact.
+6. **Protocol separation** prevents disposable experiment traffic from accidentally populating production peer state.
 
-## 3. How synchronization works, simply
+### How the code works in one minute
 
-**Think of three things:**
-
-1. **localStorage is the notebook.** The last accepted version of each preference is written there. It survives closing the tab.
-2. **BroadcastChannel is the walkie-talkie.** A tab announces a change and other tabs update immediately without refreshing.
-3. **A version counter plus tab ID is the referee.** Each setting has a `(counter, actor)` stamp. Higher counter wins. If counters tie, the larger actor ID wins. Order of arrival cannot change the final winner.
-
-Each preference is stored as its **own record**. If one tab edits the language and another edits font size, they will not overwrite each other's fields.
+- **localStorage** stores one independently stamped register per preference (`theme`, `language`, `fontSize`).
+- **BroadcastChannel** broadcasts UPDATE, HELLO, PRESENCE and snapshot requests among tabs.
+- Every register has a **Lamport counter** and **actor ID**. The highest `(counter, actor)` wins, regardless of arrival order.
+- **Storage events**, visibility recovery and periodic snapshots make the state eventually recover if a tab misses a broadcast or wakes after sleeping.
+- **A separate `RobustnessLab`** sends isolated `ROBUST_*` messages. Dropping those messages never drops real user updates.
 
 ```
-Tab A                          Browser origin                     Tab B
-  | Change dark mode               |                                 |
-  | -> write localStorage -------->|                                 |
-  | -> BroadcastChannel UPDATE ------------------------------------->|
-  |                                |      validate, compare version  |
-  |<---------------------------------------- peer may reply to PING -|
-  |                                |                                 |
+                                Browser origin
+ Tab A: settings UI      <---- BroadcastChannel ---->    Tab B: settings UI
+    |                                  |                        |
+    +----- independently versioned localStorage keys ---------+
+    |                                  |
+    +-- LabNetwork: 100 updates, 20 collisions (disposable registers)
+    +-- RobustnessLab: targeted fan-out, drop/delay/retry diagnostics
+    +-- SyncEngine: validated merge, anti-entropy, repair journal
 ```
 
-The bootstrap script in `index.html` reads saved theme and font size **before CSS**. This avoids flashing the wrong theme when a tab opens.
-
-## 4. V2 features that make the project different
-
-### A. Live network constellation
-
-Tabs announce their presence through a small heartbeat. The interface draws a circle for this tab, circles for recently seen peers and connections between them. Peer disappearance is signaled on clean close; a 9-second inactivity threshold handles missing goodbye messages. Background throttling can make presence stale; it is **a live estimate, not an exact census**.
-
-Code: `src/core/sync-engine.ts` (`HELLO`, `PRESENCE`, `GOODBYE`) and `renderGraph()` in `src/main.ts`.
-
-### B. Convergence microscope
-
-Each tab computes a **short 32-bit fingerprint** from the same canonical sequence: theme, language, font size. It reports its current fingerprint with presence messages. If a peer's last reported fingerprint matches this tab's, the UI reports agreement. Brief differences can appear while updates are in flight; waiting for the next presence message allows the display to settle.
-
-This is **not cryptographic integrity checking** or proof of global agreement. It is a lightweight demonstration that the last reported values appear aligned; hash collisions and delayed messages are possible.
-
-Code: `src/core/fingerprint.ts` and peer presence state.
-
-### C. Timing diagnostics
-
-`Ping open tabs` sends a ping and measures the time to receive a pong using `performance.now()`. This is **round-trip time** (RTT), not one-way synchronization latency. Actual incoming `UPDATE` messages carry a timestamp for an approximate one-way delivery observation. Both measurements may be affected by background throttling. No benchmark is invented or prefilled.
-
-Code: `SyncEngine.pingPeers()` and `renderBars()`.
-
-### D. Conflict playground
-
-The sandbox proposes **counter 7, actor tab-A, value dark** and **counter 7, actor tab-B, value light**. It merges both proposals in A→B and B→A delivery order using the same `compareStamp()` function as the live engine. **Both paths end with tab-B's light value.** It does not alter localStorage or your actual preferences.
-
-Code: `src/core/conflict-lab.ts`. For a true same-key live conflict, use two tabs and make edits close together; the winning revision is shown in the real revision panel.
-
-## 5. Files and responsibilities
+## Repository map
 
 ```text
-GDG_SyncSphere_Frontend_Task1_V2/
-├── index.html                  Semantic page, pre-CSS preference bootstrap
-├── assets/styles.css           Responsive layout, light/dark visual system
-├── src/
-│   ├── main.ts                 UI wiring, visualization, presets, sandbox UI
-│   ├── i18n.ts                 English/Spanish/French/Hindi translations
-│   └── core/
-│       ├── register.ts         Typed settings, validation, version comparator
-│       ├── storage.ts          Safe localStorage reads and availability
-│       ├── sync-engine.ts      Cross-tab transport, merge, presence and ping
-│       ├── conflict-lab.ts     Deterministic isolated merge example
-│       └── fingerprint.ts      Stable, noncryptographic settings checksum
-├── dist/                       Compiled JS shipped for easy running
-├── scripts/dev-server.mjs      Lightweight static server
-├── tests/                      Node unit/integration + optional browser test
-└── docs/
-    ├── EXPLAIN_LIKE_IM_FIVE.md Beginner-friendly logic and terminology
-    ├── TECHNICAL_DESIGN.md     Protocol, correctness assumptions and limits
-    ├── V2_FEATURE_WALKTHROUGH.md Presentation & explanation of new features
-    ├── TEST_REPORT_V2.md       Recorded evidence and limitations
-    ├── DEMO_SCRIPT.md          3-minute presentation walkthrough
-    └── GITHUB_SUBMISSION_CHECKLIST.md
+index.html                     UI and early theme bootstrap
+assets/styles.css              Light/dark responsive design
+src/main.ts                    Event listeners, rendering, labs, export
+src/i18n.ts                    Preference UI translations (en/es/fr/hi)
+src/core/register.ts           Preference validation, clock comparator
+src/core/storage.ts            Persistent registers and safe reads
+src/core/sync-engine.ts        Production peer communication and state repair
+src/core/lab-network.ts        100-update benchmark + 20-conflict tests
+src/core/robustness-lab.ts     V2.2 fan-out, controlled faults, ACK/retries
+src/core/reports.ts            Convergence assessment + JSON/CSV evidence
+src/core/fingerprint.ts        Deterministic non-cryptographic checksums
+src/core/conflict-lab.ts       Simple pedagogical conflict simulator
+dist/                          Compiled JS supplied for immediate usage
+scripts/dev-server.mjs         Local static-only HTTP server
+tests/*.test.mjs               Native Node unit/integration tests
+tests/browser_v22.py           Optional real-Chromium three-tab test
+docs/V2_2_ROBUSTNESS.md        Fault scenarios + testing methodology
+docs/V2_2_ARCHITECTURE.md      Sync protocol + anti-entropy tradeoffs
+docs/V2_2_TEST_REPORT.md       Verified test scope and known gaps
+docs/V2_2_CONTINUATION.md      Version, state, commands, module handover
+evidence/v2_1_browser_baseline/  Prior user-collected V2.1 measurements
 ```
 
-## 6. Challenges and responsible claims
+## Compatibility and migration
 
-- **Within-100-ms sync:** test on multiple visible/background tabs, browsers, and machines. The chart shows RTT and cannot by itself establish challenge compliance.
-- **Persistence:** disabled if browser localStorage is blocked. The UI shows unavailable state.
-- **Equal-version collisions:** order is deterministic, but it uses logical priority, **not** the physically latest click time.
-- **Multi-field presets/import:** each field is independently synchronized; a set of three changes is **not atomic** across tabs.
-- **Language:** core navigation, preferences and main V2 headings are localized in four languages; some technical details, logs, graph messages and sandbox results remain English.
-- **Security:** all incoming records are validated, the JSON import has a size limit, and log/simulation strings are inserted via `textContent` rather than raw HTML.
-- **No network dependency at runtime:** the small local HTTP server only serves static files. Preferences never reach that server.
+**No database migration and no user data reset.** Storage names retain `syncsphere:prefs:v1:*`; the existing BroadcastChannel retains `syncsphere:changes:v1`; V2.1 tests remain available. **All open tabs should use V2.2** when running new fan-out scenarios. The previous V1, V2 and V2.1 ZIPs remain separate.
 
-## 7. Evaluation submission
+## Results: separate historical evidence from fresh verification
 
-Submit the complete source and README as a GitHub repository, with a short explanation of the sync and conflict strategy and a deployment/demo link if available. The required criteria come from GDG Tech Wildcard Frontend Task 1 (brief pages 3–4). See `docs/GITHUB_SUBMISSION_CHECKLIST.md`.
+- **Baseline data from the user's V2.1 browser run:** 100/100 ACKed, approximate delivery average 0.954 ms, median 0.9 ms, P95 1.5 ms, max 2.1 ms; 20/20 two-tab conflicts converged. Raw files are in `evidence/v2_1_browser_baseline/`.
+- **V2.2 verified here:** 20/20 Node tests pass including fan-out to 2 peers, deliberately dropped first attempt recovered, processing delay, missing peer failure, peer presence repair and a boundary between production and test protocol messages.
+- **V2.2 NOT verified here:** real Chromium E2E, actual multi-background-tab performance, cross-browser stress, every failure-injection scenario on your machine. Browser automation is provided but was blocked by environment navigation policy during packaging. Report only measurements **you run** as V2.2 results.
 
-Suggested single-sentence pitch:
+Read [`docs/V2_2_TEST_REPORT.md`](docs/V2_2_TEST_REPORT.md) before submission. Do not claim an arbitrary P95 under fault injection measures ordinary 100 ms preference sync.
 
-> SyncSphere is a browser-based observatory that makes distributed-state synchronization visible: not just synced settings, but how tabs discover peers, check agreement and resolve conflicts.
+## Limitations that are worth saying out loud
 
----
+- There is **no global atomic transaction** covering multiple preferences; each key resolves independently.
+- Logical clock order is deterministic, not proof of physically latest user click.
+- Same-origin tabs can delay and throttle; one-way timing in the baseline is an **approximation**; acknowledgment RTT is more directly measured.
+- Live presence is an estimate (9-second expiry), not an infallible open/closed signal.
+- The anti-entropy strategy is eventual last-writer-wins replication for a browser demo, not a durable consensus protocol or Byzantine-resistant design.
+- If persistence is blocked, settings may still sync through BroadcastChannel while tabs remain open, but cannot survive a complete browser restart.
+- Lab retry timeouts are deliberately finite; background browser throttling can legitimately produce test failures. Report them.
 
-## V2.1 — Reliability Test Bench (new)
+## Documentation trail
 
-**Keep both browser tabs on V2.1.** The existing V2 settings format and `BroadcastChannel` name remain unchanged, but the new test messages require V2.1 in both tabs.
+Start with [`docs/V2_2_CONTINUATION.md`](docs/V2_2_CONTINUATION.md) for anyone continuing the project, [`docs/V2_2_ARCHITECTURE.md`](docs/V2_2_ARCHITECTURE.md) for internals, [`docs/V2_2_ROBUSTNESS.md`](docs/V2_2_ROBUSTNESS.md) for test instructions, and [`docs/V2_2_TEST_REPORT.md`](docs/V2_2_TEST_REPORT.md) for honest results. Older docs are retained for V1–V2.1 explanations.
 
-Navigate to **Reliability lab** in the left navigation. From one tab, select the other tab and run:
-
-- **100-update benchmark**: isolated real-tab updates with ACKs; average, median, nearest-rank P95, and maximum approximate delivery time, plus actual ACK RTTs in JSON.
-- **20-collision stress test**: simultaneous logical versions generated in separate real tabs; the winning actor is checked in both.
-- **Revision-aware convergence monitor**: compares all preference values *and* counters/actor stamps, showing divergence reasons and recovery events.
-- **Export JSON / CSV**: your machine's raw observations and methodology for a GitHub submission.
-
-**Nothing in the lab overwrites your saved preferences.** Benchmarks exercise the same BroadcastChannel name and conflict ordering used by the app, but use **isolated in-memory test registers**. They are not a benchmark of localStorage writes or cross-device synchronization.
-
-For the complete explanation, test methodology, files, caveats, and evaluator demo, read [`docs/V2_1_RELIABILITY_LAB.md`](docs/V2_1_RELIABILITY_LAB.md). For verification scope, read [`docs/TEST_REPORT_V2_1.md`](docs/TEST_REPORT_V2_1.md).
-
-```powershell
-npm start
-# Open two browser tabs on http://localhost:5173
-
-# In a different terminal:
-npm test
-
-# Optional, after installing Playwright and browser:
-python -m pip install playwright
-python -m playwright install chromium
-python tests/browser_v21.py
-```
+**Submission**: source code + README + docs + actual test evidence, optionally a hosted frontend link and a short screen-recorded demo. Source challenge: `GDG_Tech_Wildcard_Entry.pdf`, Frontend Task 1, pp. 3–4.
