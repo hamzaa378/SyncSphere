@@ -1,6 +1,8 @@
 import { SyncEngine } from "./core/sync-engine.js";
 import { simulateConflict } from "./core/conflict-lab.js";
 import { translateUI } from "./i18n.js";
+import { LabNetwork } from "./core/lab-network.js";
+import { convergence, makeReport, csvReport } from "./core/reports.js";
 function el(id) {
     const node = document.getElementById(id);
     if (!node)
@@ -9,6 +11,12 @@ function el(id) {
 }
 function setText(id, content) { el(id).textContent = content; }
 const engine = new SyncEngine();
+const lab = new LabNetwork(engine.tabId);
+let benchmarkResult = null;
+let stressResult = null;
+const convergenceHistory = [];
+let lastConvergence = null;
+let peerSignature = '';
 const themeToggle = el("theme-toggle");
 const languageSelect = el("language-select");
 const fontSlider = el("font-slider");
@@ -117,7 +125,7 @@ function renderBars(values) {
         bar.title = `${value.toFixed(1)} milliseconds round-trip`;
         holder.append(bar);
     }
-    setText("max-rtt", `Max ${peak.toFixed(1)} ms`);
+    setText("max-rtt", `Max ${Math.max(...values).toFixed(1)} ms`);
 }
 function render(snapshot) {
     latestSnapshot = snapshot;
@@ -135,6 +143,8 @@ function render(snapshot) {
     setText("tab-short", snapshot.tabId.slice(0, 6));
     setText("tab-count", String(1 + snapshot.peers.length));
     setText("received-count", String(snapshot.receivedUpdates));
+    setText("sent-count", String(snapshot.sentUpdates));
+    setText("received-diagnostic", String(snapshot.receivedUpdates));
     setText("network-status", snapshot.peers.length ? `${snapshot.peers.length} peer(s) visible` : "Only this tab so far");
     setText("state-fingerprint", snapshot.localFingerprint);
     const known = snapshot.peers.filter(peer => peer.fingerprint !== undefined);
@@ -143,12 +153,46 @@ function render(snapshot) {
         mismatch.length ? `${mismatch.length} peer state(s) differ · settling` :
             known.length === snapshot.peers.length ? "✓ All reported states match" : "Waiting for peer state reports";
     setText("state-alignment", state);
+    const alignment = convergence(snapshot);
+    setText("convergence-reason", alignment.detail);
+    setText("convergence-long", alignment.detail);
+    if (alignment.state !== lastConvergence) {
+        lastConvergence = alignment.state;
+        convergenceHistory.push({ at: new Date().toISOString(), state: alignment.state,
+            detail: alignment.detail, peers: snapshot.peers.length });
+        if (convergenceHistory.length > 200)
+            convergenceHistory.shift();
+    }
+    setText("convergence-events", `${convergenceHistory.length} convergence state transitions`);
+    const signature = snapshot.peers.map(peer => peer.id).join('|');
+    if (signature !== peerSignature) {
+        peerSignature = signature;
+        const selector = el("peer-select");
+        const selected = selector.value;
+        selector.replaceChildren();
+        if (!snapshot.peers.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Open another tab first';
+            selector.append(option);
+        }
+        else {
+            for (const peer of snapshot.peers) {
+                const option = document.createElement('option');
+                option.value = peer.id;
+                option.textContent = `Tab ${peer.id}`;
+                selector.append(option);
+            }
+            selector.value = snapshot.peers.some(peer => peer.id === selected) ? selected : snapshot.peers[0].id;
+        }
+    }
     setText("transport", snapshot.transport);
     setText("persistence", snapshot.persistent ? "● Enabled" : "⚠ Unavailable");
     setText("conflicts", String(snapshot.conflictCount));
     const lastRTT = snapshot.roundTripsMs.at(-1);
     setText("rtt-value", lastRTT === undefined ? "—" : lastRTT.toFixed(1));
     setText("rtt-caption", lastRTT === undefined ? "Run a ping with at least two tabs" : `Measured round trip · ${snapshot.roundTripsMs.length} samples collected`);
+    setText("ping-diagnostic", lastRTT === undefined ? '—' : `${lastRTT.toFixed(1)} ms`);
     const lastOneWay = snapshot.latencyMs.at(-1);
     setText("latency", lastOneWay === undefined ? "Awaiting an update" : `${lastOneWay} ms (approx.)`);
     for (const key of ["theme", "language", "fontSize"]) {
@@ -285,3 +329,115 @@ fileInput.addEventListener("change", async () => {
 // Close the BroadcastChannel cleanly when the page is truly unloaded.
 window.addEventListener("pagehide", event => { if (!event.persisted)
     engine.dispose(); });
+// ===== V2.1 Research lab ====================================================
+function reportDownload(filename, contents, mime) {
+    const url = URL.createObjectURL(new Blob([contents], { type: mime }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function statText(value) { return value === null ? '—' : `${value.toFixed(2)} ms`; }
+function renderBenchStats(result) {
+    const stats = result.deliveryStats;
+    setText('stat-avg', statText(stats.average));
+    setText('stat-median', statText(stats.median));
+    setText('stat-p95', statText(stats.p95));
+    setText('stat-max', statText(stats.maximum));
+    const successes = result.samples.filter(sample => sample.passed).length;
+    setText('bench-success', `${successes} / ${result.requested} acknowledged`);
+    setText('bench-under100', `${result.achievedUnder100ms} / ${successes} ≤ 100 ms`);
+    setText('report-samples', `Benchmark ${successes}/${result.requested} · stress ${stressResult?.converged ?? 0}/${stressResult?.requested ?? 0}`);
+}
+function renderStressTrials(result) {
+    setText('stress-converged', `${result.converged} / ${result.requested}`);
+    setText('stress-failed', String(result.trials.filter(trial => !trial.converged).length + (result.requested - result.trials.length)));
+    const trace = el('stress-trace');
+    trace.replaceChildren();
+    for (const trial of result.trials) {
+        const row = document.createElement('div');
+        row.textContent = `#${String(trial.sequence).padStart(2, '0')} ${trial.converged ? '✓' : '✕'} winner ${trial.localWinner.slice(0, 8)} · ${trial.elapsedMs.toFixed(2)} ms`;
+        trace.append(row);
+    }
+}
+function labButtons(busy) {
+    el('run-benchmark').disabled = busy;
+    el('run-stress').disabled = busy;
+    el('cancel-lab').disabled = !busy;
+    el('peer-select').disabled = busy;
+}
+const benchmarkButton = el('run-benchmark');
+benchmarkButton.addEventListener('click', async () => {
+    const peer = el('peer-select').value;
+    if (!peer)
+        return toast('Open a second tab and wait for discovery.');
+    if (!lab.available)
+        return toast('BroadcastChannel is unavailable in this browser.');
+    labButtons(true);
+    benchmarkResult = null;
+    setText('benchmark-status', 'Preparing isolated test register…');
+    setText('stat-avg', '—');
+    setText('stat-median', '—');
+    setText('stat-p95', '—');
+    setText('stat-max', '—');
+    try {
+        const result = await lab.benchmark(peer, 100, done => {
+            el('benchmark-fill').style.width = `${done}%`;
+            el('benchmark-progress').setAttribute('aria-valuenow', String(done));
+            if (done % 5 === 0 || done === 1)
+                setText('benchmark-status', `Measuring: ${done}/100 acknowledged or checked…`);
+        });
+        benchmarkResult = result;
+        renderBenchStats(result);
+        const ok = result.samples.filter(s => s.passed).length;
+        setText('benchmark-status', `${ok === 100 ? 'PASS' : 'INCOMPLETE'} · ${ok}/100 acknowledged · one-way P95 ${statText(result.deliveryStats.p95)} · ACK RTT P95 ${statText(result.rttStats.p95)}`);
+        toast('Benchmark finished. Export JSON or CSV for your submission.');
+    }
+    catch (error) {
+        setText('benchmark-status', error instanceof Error ? error.message : 'Benchmark could not start');
+    }
+    finally {
+        labButtons(false);
+    }
+});
+el('cancel-lab').addEventListener('click', () => { lab.cancel(); toast('Cancellation requested after the current sample'); });
+el('run-stress').addEventListener('click', async () => {
+    const peer = el('peer-select').value;
+    if (!peer)
+        return toast('Open a second tab and wait for discovery.');
+    if (!lab.available)
+        return toast('BroadcastChannel is unavailable in this browser.');
+    labButtons(true);
+    stressResult = null;
+    setText('stress-status', 'Preparing two real tabs…');
+    try {
+        const result = await lab.stressTest(peer, 20, done => {
+            if (done % 5 === 0 || done === 1)
+                setText('stress-status', `Checking equal-counter collisions: ${done}/20…`);
+        });
+        stressResult = result;
+        renderStressTrials(result);
+        setText('stress-status', `${result.converged === 20 ? 'PASS' : 'CHECK FAILURES'} · ${result.converged}/${result.requested} conflicts converged in both tabs`);
+        setText('report-samples', `Benchmark ${benchmarkResult?.samples.filter(s => s.passed).length ?? 0}/100 · stress ${result.converged}/${result.requested}`);
+    }
+    catch (error) {
+        setText('stress-status', error instanceof Error ? error.message : 'Conflict test failed');
+    }
+    finally {
+        labButtons(false);
+    }
+});
+el('export-report-json').addEventListener('click', () => {
+    const report = makeReport(engine.snapshot(), convergenceHistory, benchmarkResult, stressResult);
+    reportDownload('syncsphere-v2.1-evidence.json', JSON.stringify(report, null, 2), 'application/json');
+    toast('Evidence JSON exported, including methodology and raw samples');
+});
+el('export-report-csv').addEventListener('click', () => {
+    reportDownload('syncsphere-v2.1-samples.csv', csvReport(benchmarkResult, stressResult), 'text/csv;charset=utf-8');
+    toast('Raw sample CSV exported');
+});
+window.addEventListener('pagehide', event => { if (!event.persisted)
+    lab.dispose(); });

@@ -32,11 +32,12 @@
         <a href="#preferences" class="nav-link"><span class="nav-symbol">◈</span><span data-i18n="preferences">Preferences</span></a>
         <a href="#network" class="nav-link"><span class="nav-symbol">◎</span><span data-i18n="observatory">Live observatory</span><span class="tiny-live"></span></a>
         <a href="#conflict-lab" class="nav-link"><span class="nav-symbol">⚖</span><span data-i18n="conflictLab">Conflict lab</span></a>
+        <a href="#engineering-lab" class="nav-link"><span class="nav-symbol">▥</span><span>Reliability lab</span></a>
         <a href="#activity" class="nav-link"><span class="nav-symbol">≋</span><span data-i18n="syncActivity">Activity trail</span></a>
       </nav>
       <div class="rail-bottom">
         <div class="privacy-card"><div class="privacy-symbol">⌁</div><strong data-i18n="localByDesign">Local by design.</strong><p data-i18n="privacyInfo">Settings stay in your browser. No sign-in, server, or tracking.</p><div class="privacy-label"><span class="green-dot"></span><span data-i18n="storageLocal">ON-DEVICE STORAGE</span></div></div>
-        <div class="rail-footer"><span>GDG WILDCARD · V2.0</span><span>© 2026</span></div>
+        <div class="rail-footer"><span>GDG WILDCARD · V2.1</span><span>© 2026</span></div>
       </div>
     </aside>
 
@@ -66,7 +67,7 @@
           <div class="panel network-panel" id="network"><div class="panel-heading"><div><span class="section-index">02 / OBSERVE</span><h2 data-i18n="networkTitle">The living network</h2><p data-i18n="networkHelp">Open another tab. Watch it appear in the orbit.</p></div><span class="network-live"><span class="green-dot"></span>LIVE</span></div>
             <div class="network-stage"><svg id="peer-graph" viewBox="0 0 420 266" role="img" aria-label="This tab and other detected tabs shown as a live network" preserveAspectRatio="xMidYMid meet"><circle cx="210" cy="133" r="85" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 7"/><circle cx="210" cy="133" r="111" fill="none" stroke="currentColor" stroke-opacity=".07" /></svg><span class="graph-corner">LIVE GRAPH / BROWSER</span></div>
             <div class="network-legend"><span><i class="legend-me"></i><span data-i18n="yourTab">This tab</span></span><span><i class="legend-peer"></i><span data-i18n="otherTab">Other tab</span></span><span id="network-status" class="network-status">Waiting for peers</span></div>
-            <div class="convergence-strip"><div><span class="micro-label" data-i18n="stateSignature">STATE FINGERPRINT</span><strong id="state-fingerprint">--------</strong></div><div class="convergence-text" id="state-alignment">Awaiting another tab</div></div>
+            <div class="convergence-strip"><div><span class="micro-label" data-i18n="stateSignature">STATE FINGERPRINT</span><strong id="state-fingerprint">--------</strong></div><div class="convergence-text" id="state-alignment">Awaiting another tab</div></div><p id="convergence-reason" class="convergence-reason" role="status">Detailed state comparison will appear after two tabs connect.</p>
             <div class="network-actions"><div><span class="micro-label" data-i18n="syncMethod">TRANSPORT</span><strong id="transport">BroadcastChannel + storage</strong></div><button id="ping-tabs" type="button" class="button ping-btn">↔ <span data-i18n="pingTabs">Ping open tabs</span></button></div>
           </div>
         </section>
@@ -81,7 +82,10 @@
 
           <div class="panel diagnostics-panel" id="diagnostics"><div class="panel-heading"><div><span class="section-index">04 / MEASURE</span><h2 data-i18n="measureTitle">Signal diagnostics</h2><p data-i18n="measureSubtitle">Real measurements, no fabricated benchmark numbers.</p></div><span class="panel-symbol">⌁</span></div>
             <div class="latency-head"><span data-i18n="rttChart">PING ROUND-TRIP HISTORY</span><strong id="rtt-sample-count">0 samples</strong></div><div class="bars" id="rtt-bars" aria-label="Measured ping round-trip times"><div class="bar-empty" data-i18n="waitingData">Open two tabs and press Ping open tabs.</div></div><div class="chart-foot"><span>0 ms</span><span id="max-rtt">Awaiting measurements</span></div>
-            <div class="diagnostic-divider"></div><div class="detail-row"><span data-i18n="oneWay">Observed update transport</span><strong id="latency">—</strong></div><div class="detail-row"><span data-i18n="persistence">Local persistence</span><strong id="persistence">Enabled</strong></div><div class="detail-row"><span data-i18n="conflictsSeen">Real conflicts observed</span><strong id="conflicts">0</strong></div><div class="diagnostic-note" data-i18n="latencyDisclaimer">Ping is round-trip time, not one-way synchronization latency. Browser throttling can affect results.</div>
+            <div class="diagnostic-divider"></div><div class="detail-row"><span>Preference updates sent (this tab)</span><strong id="sent-count">0</strong></div>
+            <div class="detail-row"><span>Preference updates received</span><strong id="received-diagnostic">0</strong></div>
+            <div class="detail-row"><span>Latest ping RTT</span><strong id="ping-diagnostic">—</strong></div>
+            <div class="detail-row"><span data-i18n="oneWay">Observed update transport</span><strong id="latency">—</strong></div><div class="detail-row"><span data-i18n="persistence">Local persistence</span><strong id="persistence">Enabled</strong></div><div class="detail-row"><span data-i18n="conflictsSeen">Real conflicts observed</span><strong id="conflicts">0</strong></div><div class="diagnostic-note" data-i18n="latencyDisclaimer">Ping is round-trip time, not one-way synchronization latency. Browser throttling can affect results.</div>
           </div>
         </section>
 
@@ -92,8 +96,42 @@
           </div>
         </section>
 
+
+        <section class="experiment-section" id="engineering-lab" aria-label="Cross-tab reliability testing">
+          <div class="experiment-heading"><div><span class="section-index">08 / RESEARCH LAB</span><h2>Reliability test bench</h2><p>Real-tab experiments with measurable results. The test values stay separate from your saved preferences.</p></div><span class="research-pill">◉ VERIFIED SAMPLES ONLY</span></div>
+          <div class="experiment-grid">
+            <article class="panel test-bench-panel">
+              <div class="experiment-top"><span class="micro-label">A / DELIVERY PERFORMANCE</span><span class="tiny-counter">100 sequential updates</span></div>
+              <h3>Latency benchmark</h3><p>Transmit 100 versioned test-register updates to one chosen tab. Each one must be acknowledged before the next starts.</p>
+              <label class="lab-label" for="peer-select">Target connected tab</label><select id="peer-select" class="lab-select"><option value="">Open another tab first</option></select>
+              <div class="lab-buttons"><button class="button primary" id="run-benchmark" type="button">▶ Run 100 updates</button><button class="button ghost small" id="cancel-lab" type="button" disabled>Cancel</button></div>
+              <div id="benchmark-status" class="experiment-status" role="status">Ready when another tab is connected.</div>
+              <div class="progress-track" role="progressbar" aria-label="Benchmark progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="benchmark-progress"><span id="benchmark-fill"></span></div>
+              <div class="stat-grid">
+                <div><span>Average</span><strong id="stat-avg">—</strong></div><div><span>Median</span><strong id="stat-median">—</strong></div>
+                <div><span>P95</span><strong id="stat-p95">—</strong></div><div><span>Maximum</span><strong id="stat-max">—</strong></div>
+              </div>
+              <div class="experiment-notes"><span id="bench-success">0 / 100 acknowledged</span><span id="bench-under100">— below 100 ms</span></div>
+              <p class="fine-print">Delivery numbers are approximate one-way same-browser event-loop measurements. Acknowledgment RTT is measured separately and both are exported.</p>
+            </article>
+            <article class="panel test-bench-panel">
+              <div class="experiment-top"><span class="micro-label">B / DISTRIBUTED CONSISTENCY</span><span class="tiny-counter">20 real-tab collisions</span></div>
+              <h3>Conflict stress test</h3><p>Two real tabs prepare different values at the same logical counter. Both must independently arrive at the same winning register.</p>
+              <div class="lab-buttons"><button class="button primary" type="button" id="run-stress">⚖ Run 20 collisions</button></div>
+              <div id="stress-status" class="experiment-status" role="status">No experiment performed yet.</div>
+              <div class="stress-kpis"><div><span>Converged</span><strong id="stress-converged">—</strong></div><div><span>Failed or timed out</span><strong id="stress-failed">—</strong></div></div>
+              <div class="stress-trace" id="stress-trace">Run the experiment to see each real two-tab verdict.</div>
+              <p class="fine-print">Uses the production Lamport comparator, actual cross-tab messages and an isolated test register. Real user preferences are untouched.</p>
+            </article>
+          </div>
+          <div class="panel report-panel">
+            <div><span class="micro-label">C / PROOF & EXPORT</span><h3>Convergence and evidence</h3><p id="convergence-long">State history starts when another tab is detected.</p><div class="report-meta"><span id="convergence-events">No state transitions recorded</span><span id="report-samples">No benchmark report yet</span></div></div>
+            <div class="report-actions"><button type="button" class="button primary" id="export-report-json">↓ Export JSON</button><button type="button" class="button ghost" id="export-report-csv">↓ Export CSV</button></div>
+          </div>
+        </section>
+
         <div class="explanation-strip"><span class="explain-mark">i</span><div><strong data-i18n="explainStripTitle">Explain it in one sentence</strong><p data-i18n="explainStripText">BroadcastChannel delivers messages, localStorage remembers state, and Lamport counters plus tab IDs settle simultaneous edits deterministically.</p></div><a href="./docs/TECHNICAL_DESIGN.md" target="_blank" rel="noopener"><span data-i18n="technicalDocs">Technical docs</span> ↗</a></div>
-        <footer class="footer"><span>SyncSphere V2 <b>·</b> Built to understand, not just impress.</span><span>TypeScript · No runtime dependencies · Local-first</span></footer>
+        <footer class="footer"><span>SyncSphere V2.1 <b>·</b> Built to understand, not just impress.</span><span>TypeScript · No runtime dependencies · Local-first</span></footer>
       </main>
     </div>
   </div>

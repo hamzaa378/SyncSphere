@@ -160,3 +160,33 @@ Submit the complete source and README as a GitHub repository, with a short expla
 Suggested single-sentence pitch:
 
 > SyncSphere is a browser-based observatory that makes distributed-state synchronization visible: not just synced settings, but how tabs discover peers, check agreement and resolve conflicts.
+
+---
+
+## V2.1 — Reliability Test Bench (new)
+
+**Keep both browser tabs on V2.1.** The existing V2 settings format and `BroadcastChannel` name remain unchanged, but the new test messages require V2.1 in both tabs.
+
+Navigate to **Reliability lab** in the left navigation. From one tab, select the other tab and run:
+
+- **100-update benchmark**: isolated real-tab updates with ACKs; average, median, nearest-rank P95, and maximum approximate delivery time, plus actual ACK RTTs in JSON.
+- **20-collision stress test**: simultaneous logical versions generated in separate real tabs; the winning actor is checked in both.
+- **Revision-aware convergence monitor**: compares all preference values *and* counters/actor stamps, showing divergence reasons and recovery events.
+- **Export JSON / CSV**: your machine's raw observations and methodology for a GitHub submission.
+
+**Nothing in the lab overwrites your saved preferences.** Benchmarks exercise the same BroadcastChannel name and conflict ordering used by the app, but use **isolated in-memory test registers**. They are not a benchmark of localStorage writes or cross-device synchronization.
+
+For the complete explanation, test methodology, files, caveats, and evaluator demo, read [`docs/V2_1_RELIABILITY_LAB.md`](docs/V2_1_RELIABILITY_LAB.md). For verification scope, read [`docs/TEST_REPORT_V2_1.md`](docs/TEST_REPORT_V2_1.md).
+
+```powershell
+npm start
+# Open two browser tabs on http://localhost:5173
+
+# In a different terminal:
+npm test
+
+# Optional, after installing Playwright and browser:
+python -m pip install playwright
+python -m playwright install chromium
+python tests/browser_v21.py
+```

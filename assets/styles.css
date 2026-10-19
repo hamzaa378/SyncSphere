@@ -1523,3 +1523,48 @@ select {
   text-align:right;
   max-width:165px
 }
+/* V2.1: research-grade observability without changing the V2 visual identity. */
+.experiment-section{margin-top:25px;scroll-margin-top:72px}
+.experiment-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin:0 0 17px}
+.experiment-heading h2{font-size:clamp(1.45rem,2.2vw,2.05rem);letter-spacing:-.05em;margin:8px 0}
+.experiment-heading p,.test-bench-panel>p,.report-panel p{color:var(--sub);line-height:1.65;font-size:.84rem;margin:5px 0 0}
+.research-pill{display:inline-flex;flex-shrink:0;font-size:.65rem;font-weight:800;letter-spacing:.1em;color:var(--green);background:var(--mint);padding:11px 14px;border-radius:10px}
+.experiment-grid{display:grid;grid-template-columns:1fr 1fr;gap:19px}
+.experiment-grid>.panel{min-width:0}
+.test-bench-panel{display:flex;flex-direction:column;gap:14px}
+.experiment-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tiny-counter{font-size:.63rem;color:var(--sub);font-weight:700}
+.test-bench-panel h3,.report-panel h3{font-size:1.3rem;letter-spacing:-.04em;margin:0}
+.test-bench-panel>p{margin:0}
+.lab-label{font-size:.73rem;color:var(--sub);font-weight:800}
+.lab-select{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;min-height:45px}
+.lab-buttons{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.lab-buttons .button{font-size:.79rem;padding:12px 18px;cursor:pointer}
+.lab-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.experiment-status{background:var(--bg);color:var(--ink);padding:13px;border-radius:10px;font-size:.79rem;min-height:44px;line-height:1.4}
+.progress-track{height:9px;border-radius:99px;overflow:hidden;background:var(--line);margin:2px 0}
+.progress-track>span{display:block;height:100%;width:0%;transition:width .2s ease;background:#2d996c;border-radius:99px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.stat-grid>div,.stress-kpis>div{background:var(--bg);padding:12px 7px;border:1px solid var(--line);border-radius:10px;text-align:center;min-width:0}
+.stat-grid span,.stress-kpis span{display:block;text-transform:uppercase;font-size:.6rem;letter-spacing:.07em;color:var(--sub);margin-bottom:7px;font-weight:800}
+.stat-grid strong,.stress-kpis strong{font-size:clamp(.8rem,1.5vw,1.2rem);color:var(--ink);font-variant-numeric:tabular-nums}
+.experiment-notes{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.72rem;font-weight:800;color:var(--green)}
+.test-bench-panel .fine-print{margin-top:auto;color:var(--sub);font-size:.67rem;border-top:1px solid var(--line);padding-top:12px;line-height:1.6}
+.stress-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.stress-trace{max-height:135px;overflow:auto;font: .7rem/1.8 ui-monospace,monospace;color:var(--sub);background:var(--bg);border-radius:10px;padding:12px 14px}
+.stress-trace>div{border-bottom:1px solid var(--line)}
+.stress-trace>div:last-child{border-bottom:none}
+.report-panel{margin-top:19px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.report-panel>div:first-child{flex:1}
+.report-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.report-meta span{background:var(--bg);padding:7px 11px;border-radius:99px;font-size:.7rem;font-weight:700}
+.report-actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end}
+.report-actions .button{font-size:.76rem;white-space:nowrap;padding:12px 16px;cursor:pointer}
+.convergence-reason{color:var(--sub);font-size:.7rem;line-height:1.5;margin:0 0 15px}
+@media(max-width:1100px){.experiment-grid{grid-template-columns:1fr}.report-panel{align-items:flex-start;flex-direction:column}.report-actions{justify-content:flex-start}}
+@media(max-width:570px){.experiment-heading{align-items:flex-start;flex-direction:column}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.experiment-section .button.ghost{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.experiment-section .button.ghost:hover{background:var(--mint)}
+.experiment-section .button.primary{background:#16734e;color:#fff}
+.experiment-section .button.primary:hover{background:#1b9162}
+.experiment-section button:focus-visible,.lab-select:focus-visible{outline:3px solid #6fb998;outline-offset:3px}

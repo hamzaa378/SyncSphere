@@ -4,11 +4,11 @@ import {
 } from "./register.js";
 import type { PreferenceKey, Preferences, Register, Registers } from "./register.js";
 import { readAll, readRegister, storageAvailable } from "./storage.js";
-import { preferenceFingerprint } from "./fingerprint.js";
+import { preferenceFingerprint, revisionFingerprint } from "./fingerprint.js";
 
 export type ActivityKind = "local" | "received" | "conflict" | "system";
 export type Activity = { time: number; kind: ActivityKind; description: string };
-export type Peer = { id: string; lastSeen: number; fingerprint?: string };
+export type Peer = { id: string; lastSeen: number; fingerprint?: string; revision?: string; records?: Registers };
 export type Snapshot = {
   preferences: Preferences;
   records: Registers;
@@ -17,6 +17,7 @@ export type Snapshot = {
   roundTripsMs: number[];
   peers: Peer[];
   localFingerprint: string;
+  revisionFingerprint: string;
   sentUpdates: number;
   receivedUpdates: number;
   conflictCount: number;
@@ -25,7 +26,7 @@ export type Snapshot = {
   persistent: boolean;
 };
 type Message =
-  | { type: "HELLO" | "PRESENCE" | "GOODBYE"; sender: string; sentAt: number; fingerprint?: string }
+  | { type: "HELLO" | "PRESENCE" | "GOODBYE"; sender: string; sentAt: number; fingerprint?: string; revision?: string; records?: Registers }
   | { type: "PING" | "PONG"; sender: string; sentAt: number; requestId: string }
   | { type: "SNAPSHOT"; sender: string; sentAt: number; records: Registers }
   | { type: "UPDATE"; sender: string; sentAt: number; key: PreferenceKey; record: Register<unknown> };
@@ -75,7 +76,7 @@ export class SyncEngine {
     // Periodic anti-entropy also recovers when a message was missed.
     this.intervalId = window.setInterval(() => {
       if (!document.hidden) this.refreshFromStorage();
-      this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint() });
+      this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
       // A background tab may sleep. Mark unseen peers as inactive rather than
       // claiming they are definitely closed. Reappearance restores the dot.
       const cutoff = Date.now() - 9000;
@@ -86,7 +87,7 @@ export class SyncEngine {
       if (removed) this.notify();
     }, 2500);
     this.log("system", "Tab is ready. Saved preferences restored.");
-    this.send({ type: "HELLO", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint() });
+    this.send({ type: "HELLO", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
   }
 
   subscribe(listener: Listener): () => void {
@@ -99,6 +100,14 @@ export class SyncEngine {
     return preferenceFingerprint({
       theme: this.records.theme.value, language: this.records.language.value, fontSize: this.records.fontSize.value,
     });
+  }
+
+  private revisionFingerprint(): string { return revisionFingerprint(this.records); }
+
+  /** Push a fresh report when the underlying winner changes, not only on heartbeats. */
+  private reportState(): void {
+    this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(),
+      fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
   }
 
   snapshot(): Snapshot {
@@ -114,6 +123,7 @@ export class SyncEngine {
       roundTripsMs: [...this.roundTripsMs],
       peers: Array.from(this.peers.values()).map(peer => ({ ...peer })).sort((a, b) => a.id.localeCompare(b.id)),
       localFingerprint: this.localFingerprint(),
+      revisionFingerprint: this.revisionFingerprint(),
       sentUpdates: this.sentUpdates,
       receivedUpdates: this.receivedUpdates,
       conflictCount: this.conflictCount,
@@ -135,6 +145,7 @@ export class SyncEngine {
     this.log("local", `Changed ${key} to ${String(value)} in this tab.`);
     this.sentUpdates++;
     this.send({ type: "UPDATE", sender: this.tabId, sentAt: Date.now(), key, record: register });
+    this.reportState();
     this.notify();
   }
 
@@ -186,6 +197,7 @@ export class SyncEngine {
       this.assign(key, candidate);
       this.saveWinner(key);
       this.log("received", `${key} updated from ${source}.`);
+      this.reportState();
     } else if (comparison < 0 && source === "storage") {
       // Another tab wrote a stale register. Reassert the winner to disk.
       this.saveWinner(key);
@@ -226,7 +238,14 @@ export class SyncEngine {
     const previous = this.peers.get(message.sender);
     const reported = "fingerprint" in message && typeof message.fingerprint === "string"
       && /^[0-9A-F]{8}$/.test(message.fingerprint) ? message.fingerprint : previous?.fingerprint;
-    this.peers.set(message.sender, { id: message.sender, lastSeen: Date.now(), ...(reported ? { fingerprint: reported } : {}) });
+    const revision = "revision" in message && typeof message.revision === "string"
+      && /^[0-9A-F]{8}$/.test(message.revision) ? message.revision : previous?.revision;
+    const peerRecords = "records" in message && message.records && typeof message.records === "object"
+      && KEYS.every(key => parseRegister(key, (message.records as Partial<Registers>)[key]))
+      ? message.records as Registers : previous?.records;
+    this.peers.set(message.sender, { id: message.sender, lastSeen: Date.now(),
+      ...(reported ? { fingerprint: reported } : {}), ...(revision ? { revision } : {}),
+      ...(peerRecords ? { records: structuredClone(peerRecords) } : {}) });
     if (!wasKnown) { this.log("system", `Tab ${message.sender} is now visible on the network.`); }
     else this.notify();
     if (message.type === "GOODBYE") {
@@ -254,7 +273,7 @@ export class SyncEngine {
       return;
     }
     if (message.type === "HELLO") {
-      this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint() });
+      this.send({ type: "PRESENCE", sender: this.tabId, sentAt: Date.now(), fingerprint: this.localFingerprint(), revision: this.revisionFingerprint(), records: this.records });
       this.send({ type: "SNAPSHOT", sender: this.tabId, sentAt: Date.now(), records: this.records });
       return;
     }
