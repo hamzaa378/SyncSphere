@@ -347,14 +347,14 @@ function reportDownload(filename: string, contents: string, mime: string): void 
 }
 function statText(value: number | null): string { return value === null ? '—' : `${value.toFixed(2)} ms`; }
 function renderBenchStats(result: BenchmarkResult): void {
-  const stats: Stats = result.deliveryStats;
+  const stats: Stats = result.rttStats;
   setText('stat-avg', statText(stats.average));
   setText('stat-median', statText(stats.median));
   setText('stat-p95', statText(stats.p95));
   setText('stat-max', statText(stats.maximum));
   const successes = result.samples.filter(sample => sample.passed).length;
   setText('bench-success', `${successes} / ${result.requested} acknowledged`);
-  setText('bench-under100', `${result.achievedUnder100ms} / ${successes} ≤ 100 ms`);
+  setText('bench-under100', `${result.achievedUnder100ms} / ${successes} ACK RTT ≤ 100 ms`);
   setText('report-samples', `Benchmark ${successes}/${result.requested} · stress ${stressResult?.converged ?? 0}/${stressResult?.requested ?? 0}`);
 }
 function renderStressTrials(result: StressResult): void {
@@ -393,7 +393,7 @@ benchmarkButton.addEventListener('click', async () => {
     benchmarkResult = result;
     renderBenchStats(result);
     const ok = result.samples.filter(s => s.passed).length;
-    setText('benchmark-status', `${ok === 100 ? 'PASS' : 'INCOMPLETE'} · ${ok}/100 acknowledged · one-way P95 ${statText(result.deliveryStats.p95)} · ACK RTT P95 ${statText(result.rttStats.p95)}`);
+    setText('benchmark-status', `${ok === 100 && result.achievedUnder100ms === 100 ? 'PASS' : 'CHECK RESULTS'} · ${ok}/100 acknowledged · ACK RTT P95 ${statText(result.rttStats.p95)} · one-way estimates flagged ${result.oneWayExceedsRtt}/100`);
     toast('Benchmark finished. Export JSON or CSV for your submission.');
   } catch (error) {
     setText('benchmark-status', error instanceof Error ? error.message : 'Benchmark could not start');
@@ -421,11 +421,11 @@ el<HTMLButtonElement>('run-stress').addEventListener('click', async () => {
 });
 el('export-report-json').addEventListener('click', () => {
   const report = makeReport(engine.snapshot(), convergenceHistory, benchmarkResult, stressResult, fanoutResult);
-  reportDownload('syncsphere-v2.2-evidence.json', JSON.stringify(report, null, 2), 'application/json');
+  reportDownload('syncsphere-v2.3-evidence.json', JSON.stringify(report, null, 2), 'application/json');
   toast('Evidence JSON exported, including methodology and raw samples');
 });
 el('export-report-csv').addEventListener('click', () => {
-  reportDownload('syncsphere-v2.2-samples.csv', csvReport(benchmarkResult, stressResult, fanoutResult), 'text/csv;charset=utf-8');
+  reportDownload('syncsphere-v2.3-samples.csv', csvReport(benchmarkResult, stressResult, fanoutResult), 'text/csv;charset=utf-8');
   toast('Raw sample CSV exported');
 });
 window.addEventListener('pagehide', event => { if (!event.persisted) lab.dispose(); });
@@ -453,11 +453,11 @@ fanoutButton.addEventListener('click', async () => {
     setText('fanout-success', `${result.successful}/${total}`);
     setText('fanout-recovered', String(result.recovered));
     setText('fanout-failed', String(result.failed));
-    setText('fanout-status', `${result.failed ? 'CHECK FAILURES' : 'PASS'} · ${result.successful}/${total} received ACKs · ${result.recovered} recovered · RTT P95 ${statText(result.rttStats.p95)}${result.cancelled ? ' · Cancelled' : ''}`);
+    setText('fanout-status', `${result.failed ? 'CHECK FAILURES' : 'PASS'} · ${result.successful}/${total} ACKs · ${result.recovered} recovered · successful-attempt RTT P95 ${statText(result.rttStats.p95)}${result.cancelled ? ' · Cancelled' : ''}`);
     const trace = el<HTMLDivElement>('fanout-trace'); trace.replaceChildren();
     for (const sample of result.samples.slice(-48)) {
       const line = document.createElement('div');
-      line.textContent = `#${sample.sequence} ${sample.peer.slice(0, 8)} ${sample.success ? '✓' : '✕'} · ${sample.attempts} attempt(s) · ${sample.ackRttMs === null ? 'timed out' : `${sample.ackRttMs.toFixed(1)} ms`}`;
+      line.textContent = `#${sample.sequence} ${sample.peer.slice(0, 8)} ${sample.success ? '✓' : '✕'} · ${sample.attempts} attempt(s) · ${sample.ackRttMs === null ? 'timed out' : `attempt ${sample.ackRttMs.toFixed(1)} ms, total ${sample.totalElapsedMs.toFixed(1)} ms`}`;
       trace.append(line);
     }
     toast('Resilience report ready. Export JSON and CSV as evidence.');

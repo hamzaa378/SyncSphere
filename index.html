@@ -32,12 +32,12 @@
         <a href="#preferences" class="nav-link"><span class="nav-symbol">◈</span><span data-i18n="preferences">Preferences</span></a>
         <a href="#network" class="nav-link"><span class="nav-symbol">◎</span><span data-i18n="observatory">Live observatory</span><span class="tiny-live"></span></a>
         <a href="#conflict-lab" class="nav-link"><span class="nav-symbol">⚖</span><span data-i18n="conflictLab">Conflict lab</span></a>
-        <a href="#engineering-lab" class="nav-link"><span class="nav-symbol">▥</span><span>Reliability lab V2.2</span></a>
+        <a href="#engineering-lab" class="nav-link"><span class="nav-symbol">▥</span><span>Reliability lab V2.3</span></a>
         <a href="#activity" class="nav-link"><span class="nav-symbol">≋</span><span data-i18n="syncActivity">Activity trail</span></a>
       </nav>
       <div class="rail-bottom">
         <div class="privacy-card"><div class="privacy-symbol">⌁</div><strong data-i18n="localByDesign">Local by design.</strong><p data-i18n="privacyInfo">Settings stay in your browser. No sign-in, server, or tracking.</p><div class="privacy-label"><span class="green-dot"></span><span data-i18n="storageLocal">ON-DEVICE STORAGE</span></div></div>
-        <div class="rail-footer"><span>GDG WILDCARD · V2.1</span><span>© 2026</span></div>
+        <div class="rail-footer"><span>GDG WILDCARD · V2.3</span><span>© 2026</span></div>
       </div>
     </aside>
 
@@ -108,11 +108,11 @@
               <div id="benchmark-status" class="experiment-status" role="status">Ready when another tab is connected.</div>
               <div class="progress-track" role="progressbar" aria-label="Benchmark progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="benchmark-progress"><span id="benchmark-fill"></span></div>
               <div class="stat-grid">
-                <div><span>Average</span><strong id="stat-avg">—</strong></div><div><span>Median</span><strong id="stat-median">—</strong></div>
-                <div><span>P95</span><strong id="stat-p95">—</strong></div><div><span>Maximum</span><strong id="stat-max">—</strong></div>
+                <div><span>ACK RTT average</span><strong id="stat-avg">—</strong></div><div><span>ACK RTT median</span><strong id="stat-median">—</strong></div>
+                <div><span>ACK RTT P95</span><strong id="stat-p95">—</strong></div><div><span>ACK RTT maximum</span><strong id="stat-max">—</strong></div>
               </div>
               <div class="experiment-notes"><span id="bench-success">0 / 100 acknowledged</span><span id="bench-under100">— below 100 ms</span></div>
-              <p class="fine-print">Delivery numbers are approximate one-way same-browser event-loop measurements. Acknowledgment RTT is measured separately and both are exported.</p>
+              <p class="fine-print">Cards show source-tab monotonic ACK round trip (primary, reliable). One-way cross-tab timestamp estimates are diagnostic only: clocks/resolution may make them exceed RTT. Both series are exported.</p>
             </article>
             <article class="panel test-bench-panel">
               <div class="experiment-top"><span class="micro-label">B / DISTRIBUTED CONSISTENCY</span><span class="tiny-counter">20 real-tab collisions</span></div>

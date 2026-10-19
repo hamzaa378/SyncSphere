@@ -40,6 +40,8 @@ export class LabNetwork {
     dispose() {
         this.cancel();
         this.channel?.close();
+        this.register.clear();
+        this.stress.clear();
         for (const p of this.pending.values()) {
             clearTimeout(p.timeout);
             p.reject(new Error("Lab closed"));
@@ -47,14 +49,14 @@ export class LabNetwork {
         this.pending.clear();
     }
     send(message) { this.channel?.postMessage(message); }
-    awaitMessage(id, seq, type, ms = 2500) {
+    awaitMessage(id, seq, type, expectedPeer, ms = 2500) {
         const key = makeKey(id, seq, type);
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
                 this.pending.delete(key);
                 reject(new Error(`${type} timed out after ${ms} ms`));
             }, ms);
-            this.pending.set(key, { resolve, reject, timeout });
+            this.pending.set(key, { expectedPeer, resolve, reject, timeout });
         });
     }
     onMessage(raw) {
@@ -69,12 +71,14 @@ export class LabNetwork {
         const message = msg;
         const waitKey = makeKey(message.id, message.sequence, message.type);
         const pending = this.pending.get(waitKey);
-        if (pending) {
+        if (pending && pending.expectedPeer === message.sender) {
             this.pending.delete(waitKey);
             clearTimeout(pending.timeout);
             pending.resolve(message);
         }
-        if (message.type === "LAB_BENCH_UPDATE" && typeof message.value === "number" && message.stamp) {
+        if (message.type === "LAB_BENCH_UPDATE" && typeof message.value === "number" && Number.isInteger(message.value)
+            && message.stamp && message.stamp.actor === message.sender
+            && Number.isSafeInteger(message.stamp.counter) && message.stamp.counter === message.sequence) {
             const measured = typeof message.sentAt === "number" ? clock() - message.sentAt : NaN;
             const key = `bench/${message.id}`;
             const candidate = { value: message.value, stamp: message.stamp };
@@ -116,6 +120,8 @@ export class LabNetwork {
             this.register.set(key, next);
             this.send({ type: "LAB_STRESS_REPORT", sender: this.tabId, to: message.sender,
                 id: message.id, sequence: message.sequence, winner: next.stamp.actor });
+            this.register.delete(key);
+            this.stress.delete(key); // Remote trial is complete: bounded memory.
         }
     }
     async benchmark(peer, count = 100, progress = () => { }) {
@@ -134,7 +140,7 @@ export class LabNetwork {
                 const start = performance.now();
                 // Register is an isolated test value, not the user's fontSize preference.
                 this.register.set(`bench/${id}`, apply(this.register.get(`bench/${id}`), { value, stamp }));
-                const pending = this.awaitMessage(id, sequence, "LAB_BENCH_ACK", 2500);
+                const pending = this.awaitMessage(id, sequence, "LAB_BENCH_ACK", peer, 2500);
                 this.send({ type: "LAB_BENCH_UPDATE", sender: this.tabId, to: peer, id, sequence, value,
                     stamp, sentAt: clock() });
                 try {
@@ -142,7 +148,7 @@ export class LabNetwork {
                     const rtt = performance.now() - start;
                     const delivered = typeof ack.deliveryMs === "number" && Number.isFinite(ack.deliveryMs)
                         ? Math.round(ack.deliveryMs * 1000) / 1000 : null;
-                    const passed = ack.sender === peer && ack.accepted === true && delivered !== null;
+                    const passed = ack.sender === peer && ack.accepted === true; // One-way diagnostic timestamps are NOT a pass prerequisite.
                     samples.push({ sequence, peer, deliveryMs: delivered,
                         acknowledgementMs: Math.round(rtt * 1000) / 1000,
                         passed, reason: passed ? "Applied by peer" : "Invalid or rejected acknowledgment" });
@@ -169,7 +175,8 @@ export class LabNetwork {
             requested: count, samples,
             deliveryStats: describe(passing.flatMap(s => s.deliveryMs === null ? [] : [s.deliveryMs])),
             rttStats: describe(passing.flatMap(s => s.acknowledgementMs === null ? [] : [s.acknowledgementMs])),
-            achievedUnder100ms: passing.filter(s => s.deliveryMs !== null && s.deliveryMs <= 100).length };
+            achievedUnder100ms: passing.filter(s => s.acknowledgementMs !== null && s.acknowledgementMs <= 100).length,
+            oneWayExceedsRtt: passing.filter(s => s.deliveryMs !== null && s.acknowledgementMs !== null && s.deliveryMs > s.acknowledgementMs + .05).length };
     }
     async stressTest(peer, count = 20, progress = () => { }) {
         if (!this.channel || this.active || peer === this.tabId)
@@ -191,14 +198,14 @@ export class LabNetwork {
                 let remoteWinner = null;
                 let reason = "Verified in both tabs";
                 try {
-                    const readyPromise = this.awaitMessage(id, sequence, "LAB_STRESS_READY");
+                    const readyPromise = this.awaitMessage(id, sequence, "LAB_STRESS_READY", peer);
                     this.send({ type: "LAB_STRESS_PREPARE", sender: this.tabId, to: peer, id, sequence,
                         value: sequence % 2 ? 15 : 14, stamp: local.stamp });
                     const ready = await readyPromise;
                     if (ready.sender !== peer)
                         throw new Error("Unexpected READY sender");
-                    const reportPromise = this.awaitMessage(id, sequence, "LAB_STRESS_REPORT");
-                    const candidatePromise = this.awaitMessage(id, sequence, "LAB_STRESS_CANDIDATE");
+                    const reportPromise = this.awaitMessage(id, sequence, "LAB_STRESS_REPORT", peer);
+                    const candidatePromise = this.awaitMessage(id, sequence, "LAB_STRESS_CANDIDATE", peer);
                     this.stress.get(key).fired = true;
                     this.register.set(key, local);
                     this.send({ type: "LAB_STRESS_FIRE", sender: this.tabId, to: peer, id, sequence });

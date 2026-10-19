@@ -63,7 +63,7 @@ export class RobustnessLab {
         if (msg.type === 'ROBUST_ACK') {
             const pendingKey = keyFor(msg.run, msg.sender, msg.sequence, msg.attempt);
             const item = this.pending.get(pendingKey);
-            if (!item || item.peer !== msg.sender)
+            if (!item || item.peer !== msg.sender || item.fault !== msg.fault)
                 return;
             clearTimeout(item.timeout);
             this.pending.delete(pendingKey);
@@ -96,11 +96,11 @@ export class RobustnessLab {
         else
             reply();
     }
-    wait(run, peer, seq, attempt, ms) {
+    wait(run, peer, seq, attempt, ms, fault) {
         const key = keyFor(run, peer, seq, attempt);
         return new Promise(resolve => {
             const timeout = setTimeout(() => { this.pending.delete(key); resolve(false); }, ms);
-            this.pending.set(key, { peer, resolve, timeout });
+            this.pending.set(key, { peer, fault, resolve, timeout });
         });
     }
     /** All messages are addressed to real discovered tabs. Missing ACKs are failures, not hidden. */
@@ -123,19 +123,25 @@ export class RobustnessLab {
                     if (this.cancelled || this.closed)
                         break;
                     const start = performance.now();
-                    let success = false, attempts = 0;
+                    let success = false, attempts = 0, ackRttMs = null;
+                    const attemptDurationsMs = [];
                     for (let attempt = 1; attempt <= maxAttempts && !this.cancelled; attempt++) {
                         attempts = attempt;
-                        const received = this.wait(run, peer, sequence, attempt, timeoutMs);
+                        const attemptStart = performance.now();
+                        const received = this.wait(run, peer, sequence, attempt, timeoutMs, mode);
                         this.send({ type: 'ROBUST_UPDATE', sender: this.tabId, to: peer, run,
                             sequence, attempt, fault: mode, value: sequence });
-                        if (await received) {
+                        const confirmed = await received;
+                        const duration = Math.round((performance.now() - attemptStart) * 1000) / 1000;
+                        attemptDurationsMs.push(duration);
+                        if (confirmed) {
                             success = true;
+                            ackRttMs = duration;
                             break;
                         }
                     }
                     samples.push({ sequence, peer, success, attempts, recovered: success && attempts > 1,
-                        ackRttMs: success ? Math.round((performance.now() - start) * 1000) / 1000 : null,
+                        ackRttMs, totalElapsedMs: Math.round((performance.now() - start) * 1000) / 1000, attemptDurationsMs,
                         reason: success ? (attempts > 1 ? 'Recovered after retry' : 'ACK received') : 'No ACK after retries' });
                     progress(samples.length, targets.length * perPeer);
                 }

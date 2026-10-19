@@ -6,7 +6,7 @@ import type { Stats } from './lab-network.js';
 export type FaultMode = 'normal' | 'drop-first' | 'delay-150' | 'mixed';
 export type FanoutSample = {
   sequence: number; peer: string; success: boolean; attempts: number;
-  recovered: boolean; ackRttMs: number | null; reason: string;
+  recovered: boolean; ackRttMs: number | null; totalElapsedMs: number; attemptDurationsMs: number[]; reason: string;
 };
 export type FanoutResult = {
   id: string; startedAt: string; finishedAt: string; mode: FaultMode;
@@ -18,7 +18,7 @@ type Wire = {
   type: 'ROBUST_UPDATE' | 'ROBUST_ACK'; sender: string; to: string; run: string;
   sequence: number; attempt: number; fault: FaultMode; value?: number;
 };
-type Pending = { peer: string; resolve: (ok: boolean) => void; timeout: ReturnType<typeof setTimeout> };
+type Pending = { peer: string; fault: FaultMode; resolve: (ok: boolean) => void; timeout: ReturnType<typeof setTimeout> };
 const token = () => `robust-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 const keyFor = (run: string, peer: string, seq: number, attempt: number) => `${run}/${peer}/${seq}/${attempt}`;
 export function faultFor(mode: FaultMode, sequence: number): 'normal' | 'drop-first' | 'delay-150' {
@@ -64,7 +64,7 @@ export class RobustnessLab {
     if (msg.type === 'ROBUST_ACK') {
       const pendingKey = keyFor(msg.run, msg.sender, msg.sequence, msg.attempt);
       const item = this.pending.get(pendingKey);
-      if (!item || item.peer !== msg.sender) return;
+      if (!item || item.peer !== msg.sender || item.fault !== msg.fault) return;
       clearTimeout(item.timeout); this.pending.delete(pendingKey); item.resolve(true);
       return;
     }
@@ -84,11 +84,11 @@ export class RobustnessLab {
       this.delayed.add(timer);
     } else reply();
   }
-  private wait(run: string, peer: string, seq: number, attempt: number, ms: number): Promise<boolean> {
+  private wait(run: string, peer: string, seq: number, attempt: number, ms: number, fault: FaultMode): Promise<boolean> {
     const key = keyFor(run, peer, seq, attempt);
     return new Promise(resolve => {
       const timeout = setTimeout(() => { this.pending.delete(key); resolve(false); }, ms);
-      this.pending.set(key, { peer, resolve, timeout });
+      this.pending.set(key, { peer, fault, resolve, timeout });
     });
   }
   /** All messages are addressed to real discovered tabs. Missing ACKs are failures, not hidden. */
@@ -108,16 +108,21 @@ export class RobustnessLab {
         for (const peer of targets) {
           if (this.cancelled || this.closed) break;
           const start = performance.now();
-          let success = false, attempts = 0;
+          let success = false, attempts = 0, ackRttMs: number | null = null;
+          const attemptDurationsMs: number[] = [];
           for (let attempt = 1; attempt <= maxAttempts && !this.cancelled; attempt++) {
             attempts = attempt;
-            const received = this.wait(run, peer, sequence, attempt, timeoutMs);
+            const attemptStart = performance.now();
+            const received = this.wait(run, peer, sequence, attempt, timeoutMs, mode);
             this.send({ type: 'ROBUST_UPDATE', sender: this.tabId, to: peer, run,
               sequence, attempt, fault: mode, value: sequence });
-            if (await received) { success = true; break; }
+            const confirmed = await received;
+            const duration = Math.round((performance.now() - attemptStart) * 1000) / 1000;
+            attemptDurationsMs.push(duration);
+            if (confirmed) { success = true; ackRttMs = duration; break; }
           }
           samples.push({ sequence, peer, success, attempts, recovered: success && attempts > 1,
-            ackRttMs: success ? Math.round((performance.now() - start) * 1000) / 1000 : null,
+            ackRttMs, totalElapsedMs: Math.round((performance.now() - start) * 1000) / 1000, attemptDurationsMs,
             reason: success ? (attempts > 1 ? 'Recovered after retry' : 'ACK received') : 'No ACK after retries' });
           progress(samples.length, targets.length * perPeer);
         }

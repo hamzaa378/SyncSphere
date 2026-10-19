@@ -1,134 +1,149 @@
-# SyncSphere V2.2 — The Browser Reliability Lab
+# SyncSphere
 
-**GDG Tech Wildcard Entry | Frontend Task 1 | TypeScript**
+**GDG Tech Wildcard Entry · Frontend Development Task 1 · TypeScript · Release v2.3**
 
-A local-first multi-tab settings app that makes browser synchronization **observable, testable and recoverable**. Unlike a basic theme toggle, SyncSphere exposes active peers, per-setting version stamps, conflict resolution, latency measurements, a real-tab stress bench, recoveries after artificial message loss, and downloadable evidence. No frontend framework, remote server, database, user account, tracking, or runtime dependencies.
+SyncSphere is a browser-based **multi-tab settings synchronization app and reliability lab**. Change appearance, language, or font size in one tab and watch every other open tab update without refreshing. Unlike a basic preferences page, SyncSphere also shows **why a conflict was resolved**, **whether replicas agree**, and **how cross-tab messaging behaves under controlled failures**.
 
-> **Core scope:** preferences synchronize between tabs in the **same browser profile and origin**. This is not multi-device synchronization. Test messages never modify actual preferences. V2.1 reports bundled below are real data from a prior V2.1 browser run; **V2.2 browser performance has not been measured in this environment**.
+The application uses TypeScript, `BroadcastChannel`, `localStorage`, the `storage` event, and browser DOM APIs. **No backend or login is required.** A small Node HTTP server is included for local development; the compiled `dist/` files are part of this repository for immediate startup and static hosting.
 
-## Start in less than a minute
+## Quick start (Windows PowerShell)
 
-Requirements: Node.js 18+, recent Chrome/Brave/Edge/Firefox. From the extracted directory:
+Prerequisite: **Node.js 18+** (Node.js 22 recommended).
 
 ```powershell
+# Run from the extracted folder containing package.json
 npm start
 ```
 
-Open **http://localhost:5173** in **three tabs** for the new multi-peer tests. The `dist/` folder ships precompiled, so `npm start` doesn't require npm installation. To edit source and run tests:
+Visit **http://localhost:5173** in **three tabs** of the same browser profile. Each tab must use the *same address and port*. If port 5173 is occupied:
+
+```powershell
+$env:PORT = "5183"
+npm start
+```
+
+Development and tests:
 
 ```powershell
 npm install
-npm run build
+npm test
+npm run dev
+```
+
+> `npm start` uses bundled compiled JavaScript, so an npm install is not needed merely to open the demo. `npm test`, rebuilding and development require installing TypeScript.
+
+**New to the project?** Read **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)**, including installation, screenshots/evidence capture, troubleshooting, and publishing to GitHub.
+
+## What you can demonstrate
+
+| Feature | Purpose |
+| --- | --- |
+| Live theme, language, and font-size synchronization | Meets the GDG challenge's core functionality |
+| Persistence and pre-paint theme bootstrap | Keeps preferences after reopening without a flash of the wrong theme |
+| Deterministic Lamport revision comparison | Resolves same-setting concurrent writes consistently |
+| Live peer graph, activity log, fingerprints and diagnostics | Makes state changes and convergence explainable |
+| 100-update ACK benchmark | Average, median, P95 and maximum measured **acknowledgment round-trip time** |
+| 20 two-tab conflict trials | Tests that two real tabs agree on a deterministic winner |
+| Three-tab fan-out and fault injection | Tests normal, drop-first, 150-ms delay and mixed scenarios with retries |
+| Revision comparison and repair snapshots | Supports anti-entropy reconciliation after missed state messages |
+| JSON/CSV exports plus verifier | Preserves raw samples and checks report integrity independently |
+
+The 100-update benchmark uses isolated test registers, **not actual UI preference writes**. Fault injection also affects test traffic only; it cannot deliberately corrupt real saved preferences. ACK RTT is **not** equivalent to end-to-end UI paint time, and the optional cross-context one-way timing estimate is diagnostic only.
+
+## Architecture in one view
+
+```mermaid
+flowchart LR
+    UI[Theme / Language / Font controls] --> ENGINE[SyncEngine]
+    ENGINE --> REG[Independent stamped registers]
+    ENGINE --> STORAGE[(localStorage)]
+    ENGINE <-->|BroadcastChannel| PEERS[Other tabs]
+    PEERS <-->|Presence / peer snapshots| ENGINE
+    LAB[Benchmark & fault laboratory] <-->|Isolated lab messages| PEERS
+    ENGINE --> OBS[Live observatory]
+    LAB --> REPORTS[JSON / CSV evidence]
+```
+
+A setting is stored as `{value, stamp: {counter, actor}}`. When two valid updates conflict, the register with the greater Lamport counter wins; a stable actor-ID comparison breaks equal-counter ties. All tabs apply the same comparison, allowing **eventual convergence**. `localStorage` supports persistence; peer presence and directed snapshots help detect and repair lagging state. This is **not** distributed consensus or a globally atomic multi-setting transaction.
+
+## Tested results
+
+A Windows user-side Playwright Chromium run on **19 October 2026** reported:
+
+| Test | Observed result |
+| --- | --- |
+| 100 sequential benchmark updates | PASS |
+| 20 conflict trials | PASS |
+| Normal fan-out, 3 tabs | 24/24 ACKs, P95 0.50 ms (successful-attempt RTT) |
+| Drop-first fan-out | 24/24 ACKs, 24 recovered, P95 0.90 ms |
+| 150-ms delayed-ACK fan-out | 24/24 ACKs, P95 162.30 ms |
+| Mixed fault fan-out | 24/24 ACKs, 12 recovered, P95 157.20 ms |
+| Browser persistence and JSON/CSV validation | PASS; 144 matched records |
+| Approximate one-way estimate higher than RTT | 18 flagged observations, not failed ACKs |
+
+**Provenance:** these are results from the project owner's console output, not a new benchmark on an arbitrary machine. The **raw V2.3 JSON/CSV exports are not included** because they have not been provided for this release package. To attach complete V2.3 evidence, follow [EVIDENCE_AND_RESULTS.md](docs/EVIDENCE_AND_RESULTS.md). Verified earlier-version raw JSON/CSV files remain under `evidence/v2_1_browser_baseline/` and `evidence/v2_2_browser_baseline/`.
+
+The deliberately injected 150-ms delay is **not** a failure of the challenge's normal sub-100-ms target. For the target itself, assess the normal unfaulted path and real preference behavior; the test-register ACK RTT is supporting protocol evidence, not sufficient alone to establish UI end-to-end latency.
+
+## Testing
+
+```powershell
+npm install
 npm test
 ```
 
-The CLI uses a lightweight static server, not a sync backend. Avoid double-clicking `index.html` as `file://` origins behave differently.
-
-For real Chromium E2E (run with the server already started):
+With `npm start` running in another terminal:
 
 ```powershell
 python -m pip install playwright
 python -m playwright install chromium
-python tests/browser_v22.py
+python tests/browser_v23.py http://localhost:5173
+
+python scripts/verify_evidence.py `
+  ".\tests\artifacts\v23_latest\syncsphere-v2.3-evidence.json" `
+  ".\tests\artifacts\v23_latest\syncsphere-v2.3-samples.csv"
 ```
 
-If port 5173 is occupied, on PowerShell set `$env:PORT = 5183` before `npm start`, and pass `http://localhost:5183` to the test script.
+The browser script covers 3 Chromium tabs, 100 updates, 20 collisions, all four fault modes, a real font setting update, saved-state reopening, and export verification. Note that its **144-row export records only the latest (Mixed) fan-out mode**, not 24 rows from each of the four modes. Retain the console output and export individual reports for all modes if required.
 
-## Show a GDG evaluator
+For the full manual scenarios, repeatable testing practices and expected outcomes, use **[TEST_INSTRUCTIONS_V2_3.md](docs/TEST_INSTRUCTIONS_V2_3.md)**.
 
-| Interaction | What it proves | Caveat |
-| --- | --- | --- |
-| Change theme, language or font in any tab | Required live preference synchronization | Same origin/profile only |
-| Close all tabs and reopen | Versioned persistence and theme initialization | Storage must be enabled |
-| Ping tabs | Round-trip timing | RTT is not one-way latency |
-| Run **100 updates** | Real-tab isolated ACK benchmark, averages/median/P95/max | Does not exercise DOM redraw or persistent settings writes |
-| Run **20 collisions** | Deterministic equal-counter conflicts in real tabs | One pair/one winning actor in each run |
-| Run **Test all detected tabs** in `normal` mode | Every chosen peer ACKs 12 messages | Peers must have V2.2 open |
-| Choose **Drop first attempt** | Controlled loss, retry and recovery accounting | Intentional lab fault, not normal delivery performance |
-| Choose **Delay 150 ms** | Timeout/latency diagnostics under injected lag | Not a real browser slowdown |
-| Choose **Mixed** | Alternating drops and processing delay | Results are fault-injected RTT |
-| Close a tab during the fan-out run | Lost peers produce explicit failed attempts | Can require up to the configured timeout |
-| Click **Verify and reconcile now** | Request full-state anti-entropy and inspect journal | A check doesn't imply actual repair was needed |
-| Download JSON & CSV | Raw evidence, methods, test IDs, failures | Collect on the same version in all tabs |
-
-### V2.2 changes over V2.1
-
-1. **Fan-out resilience lab** delivers a set of isolated versioned updates to every detected tab (recommended 3–5 tabs). Unique run IDs and target IDs keep ACKs attributable.
-2. **Fault injection** covers dropped first attempts, 150 ms delayed ACKs, retry recovery, failure on tab disconnect and cancellation. Retries are bounded (two attempts), not an infinite loop.
-3. **Anti-entropy repair** now merges a newer validated per-setting register learned through HELLO/PRESENCE, or sends a *targeted, throttled* SNAPSHOT to a lagging tab. A manual verification control requests fresh state reports.
-4. **Recovery journal** exposes state checks, accepted repairs, repair snapshots, most recent recovery reason and freshness of detected peers.
-5. **Evidence schema 2.0** adds the full fan-out sample set, injected scenario, attempts, recovered statuses, report context and explicit methodology. The original 100-update baseline and 20-conflict tests remain intact.
-6. **Protocol separation** prevents disposable experiment traffic from accidentally populating production peer state.
-
-### How the code works in one minute
-
-- **localStorage** stores one independently stamped register per preference (`theme`, `language`, `fontSize`).
-- **BroadcastChannel** broadcasts UPDATE, HELLO, PRESENCE and snapshot requests among tabs.
-- Every register has a **Lamport counter** and **actor ID**. The highest `(counter, actor)` wins, regardless of arrival order.
-- **Storage events**, visibility recovery and periodic snapshots make the state eventually recover if a tab misses a broadcast or wakes after sleeping.
-- **A separate `RobustnessLab`** sends isolated `ROBUST_*` messages. Dropping those messages never drops real user updates.
-
-```
-                                Browser origin
- Tab A: settings UI      <---- BroadcastChannel ---->    Tab B: settings UI
-    |                                  |                        |
-    +----- independently versioned localStorage keys ---------+
-    |                                  |
-    +-- LabNetwork: 100 updates, 20 collisions (disposable registers)
-    +-- RobustnessLab: targeted fan-out, drop/delay/retry diagnostics
-    +-- SyncEngine: validated merge, anti-entropy, repair journal
-```
-
-## Repository map
+## Project structure
 
 ```text
-index.html                     UI and early theme bootstrap
-assets/styles.css              Light/dark responsive design
-src/main.ts                    Event listeners, rendering, labs, export
-src/i18n.ts                    Preference UI translations (en/es/fr/hi)
-src/core/register.ts           Preference validation, clock comparator
-src/core/storage.ts            Persistent registers and safe reads
-src/core/sync-engine.ts        Production peer communication and state repair
-src/core/lab-network.ts        100-update benchmark + 20-conflict tests
-src/core/robustness-lab.ts     V2.2 fan-out, controlled faults, ACK/retries
-src/core/reports.ts            Convergence assessment + JSON/CSV evidence
-src/core/fingerprint.ts        Deterministic non-cryptographic checksums
-src/core/conflict-lab.ts       Simple pedagogical conflict simulator
-dist/                          Compiled JS supplied for immediate usage
-scripts/dev-server.mjs         Local static-only HTTP server
-tests/*.test.mjs               Native Node unit/integration tests
-tests/browser_v22.py           Optional real-Chromium three-tab test
-docs/V2_2_ROBUSTNESS.md        Fault scenarios + testing methodology
-docs/V2_2_ARCHITECTURE.md      Sync protocol + anti-entropy tradeoffs
-docs/V2_2_TEST_REPORT.md       Verified test scope and known gaps
-docs/V2_2_CONTINUATION.md      Version, state, commands, module handover
-evidence/v2_1_browser_baseline/  Prior user-collected V2.1 measurements
+SyncSphere/
+├── index.html                  # Early theme bootstrap + user interface
+├── assets/styles.css           # Responsive styles
+├── src/                        # TypeScript application code
+│   ├── main.ts                  # UI orchestration
+│   ├── i18n.ts                  # English, Hindi, French, Spanish
+│   └── core/                    # Registers, sync engine, labs, reports
+├── dist/                       # Checked-in JavaScript for npm start/static hosting
+├── scripts/                    # Local static server and evidence validator
+├── tests/                      # Node tests and 3-tab Playwright acceptance test
+├── evidence/                   # Historical raw reports and V2.3 results notes
+├── docs/                       # Setup, architecture, test procedures and handover
+├── .github/workflows/ci.yml    # GitHub Actions: TypeScript + tests + evidence checks
+└── package.json
 ```
 
-## Compatibility and migration
+## Docs for contributors and judges
 
-**No database migration and no user data reset.** Storage names retain `syncsphere:prefs:v1:*`; the existing BroadcastChannel retains `syncsphere:changes:v1`; V2.1 tests remain available. **All open tabs should use V2.2** when running new fan-out scenarios. The previous V1, V2 and V2.1 ZIPs remain separate.
+- **[Setup & GitHub upload guide](docs/SETUP_GUIDE.md)**: prerequisites, commands, common errors, GitHub push, optional static deployment.
+- **[Evidence and verified test results](docs/EVIDENCE_AND_RESULTS.md)**: real observed metrics, limitations, how to attach raw V2.3 output.
+- **[Testing and reproducibility runbook](docs/TEST_INSTRUCTIONS_V2_3.md)**: manual acceptance tests, failures, comparable repeated runs.
+- **[Technical design](docs/TECHNICAL_DESIGN.md)** and **[V2.3 audit](docs/V2_3_AUDIT_AND_FIXES.md)**: why each component exists.
+- **[Beginner explanation](docs/EXPLAIN_LIKE_IM_FIVE.md)** and **[3-minute demo](docs/DEMO_SCRIPT_V2_3.md)**: how to present the project.
+- **[Continuation guide](docs/V2_3_CONTINUATION.md)**: implementation handoff.
+- **[Submission checklist](docs/GITHUB_SUBMISSION_CHECKLIST.md)**: final pre-publication checks.
 
-## Results: separate historical evidence from fresh verification
+## Scope and known limitations
 
-- **Baseline data from the user's V2.1 browser run:** 100/100 ACKed, approximate delivery average 0.954 ms, median 0.9 ms, P95 1.5 ms, max 2.1 ms; 20/20 two-tab conflicts converged. Raw files are in `evidence/v2_1_browser_baseline/`.
-- **V2.2 verified here:** 20/20 Node tests pass including fan-out to 2 peers, deliberately dropped first attempt recovered, processing delay, missing peer failure, peer presence repair and a boundary between production and test protocol messages.
-- **V2.2 NOT verified here:** real Chromium E2E, actual multi-background-tab performance, cross-browser stress, every failure-injection scenario on your machine. Browser automation is provided but was blocked by environment navigation policy during packaging. Report only measurements **you run** as V2.2 results.
+- Synchronization is for multiple tabs on the **same origin and browser profile**, not multiple devices.
+- Cross-tab state is eventually consistent and conflict winners follow **Lamport ordering**, not necessarily the most recent wall-clock click.
+- `localStorage` can be disabled or cleared by privacy settings. Tab-discovery heartbeats and timing can be delayed by background-tab throttling.
+- Benchmarks depend on browser, CPU, power mode, visibility and operating-system scheduling. Do not promise identical millisecond output in every run.
+- Fingerprints are compact state diagnostics, **not cryptographic integrity proofs**.
+- The archived V2.1/V2.2 docs and measurements are historical; use the V2.3 documents above for current procedures.
 
-Read [`docs/V2_2_TEST_REPORT.md`](docs/V2_2_TEST_REPORT.md) before submission. Do not claim an arbitrary P95 under fault injection measures ordinary 100 ms preference sync.
-
-## Limitations that are worth saying out loud
-
-- There is **no global atomic transaction** covering multiple preferences; each key resolves independently.
-- Logical clock order is deterministic, not proof of physically latest user click.
-- Same-origin tabs can delay and throttle; one-way timing in the baseline is an **approximation**; acknowledgment RTT is more directly measured.
-- Live presence is an estimate (9-second expiry), not an infallible open/closed signal.
-- The anti-entropy strategy is eventual last-writer-wins replication for a browser demo, not a durable consensus protocol or Byzantine-resistant design.
-- If persistence is blocked, settings may still sync through BroadcastChannel while tabs remain open, but cannot survive a complete browser restart.
-- Lab retry timeouts are deliberately finite; background browser throttling can legitimately produce test failures. Report them.
-
-## Documentation trail
-
-Start with [`docs/V2_2_CONTINUATION.md`](docs/V2_2_CONTINUATION.md) for anyone continuing the project, [`docs/V2_2_ARCHITECTURE.md`](docs/V2_2_ARCHITECTURE.md) for internals, [`docs/V2_2_ROBUSTNESS.md`](docs/V2_2_ROBUSTNESS.md) for test instructions, and [`docs/V2_2_TEST_REPORT.md`](docs/V2_2_TEST_REPORT.md) for honest results. Older docs are retained for V1–V2.1 explanations.
-
-**Submission**: source code + README + docs + actual test evidence, optionally a hosted frontend link and a short screen-recorded demo. Source challenge: `GDG_Tech_Wildcard_Entry.pdf`, Frontend Task 1, pp. 3–4.
+**Submission status:** complete source and runnable test suite are packaged. A public GitHub URL and a live deployment URL must be added **after publishing**; neither has been invented here. Add license terms only after choosing a license.

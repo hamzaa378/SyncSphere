@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned TypeScript dependency
+        run: npm install --no-audit --no-fund
+      - name: Compile and run Node tests
+        run: npm test
+      - name: Verify historical V2.1 raw report
+        run: python scripts/verify_evidence.py evidence/v2_1_browser_baseline/syncsphere-v2.1-evidence.json evidence/v2_1_browser_baseline/syncsphere-v2.1-samples.csv
+      - name: Verify historical V2.2 raw report
+        run: python scripts/verify_evidence.py evidence/v2_2_browser_baseline/syncsphere-v2.2-evidence.json evidence/v2_2_browser_baseline/syncsphere-v2.2-samples.csv
+      # Browser E2E requires Playwright Chromium and a separately running HTTP server.
+      # See docs/SETUP_GUIDE.md for the tested Windows procedure.

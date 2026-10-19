@@ -1,0 +1,1310 @@
+{
+  "schema": "syncsphere-lab-report/2.0",
+  "application": "SyncSphere v2.2",
+  "exportedAt": "2026-10-19T12:42:01.672Z",
+  "context": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "activePeerCount": 2,
+    "transport": "BroadcastChannel + storage",
+    "persistent": true,
+    "tabId": "3b55665a"
+  },
+  "methodology": {
+    "benchmark": "100 isolated consecutive versioned register updates between two real tabs, each confirmed by an acknowledgment over the production BroadcastChannel. Does not modify actual preferences.",
+    "delivery": "Approximate one-way event-loop delivery: receiver(performance.timeOrigin + performance.now) minus sender equivalent. Same device/time origin; not guaranteed network-grade synchronization timing.",
+    "rtt": "Source tab performance.now elapsed until acknowledgment was received; includes reply handling.",
+    "p95": "Nearest-rank 95th percentile of successful samples; failures and timeouts reported separately.",
+    "stress": "Independent equal-counter conflicting proposals created in two real tabs before observing one another; both apply the same Lamport counter/tab ID comparator. Isolated from saved preferences.",
+    "fanout": "All selected live peers receive separate isolated test-register messages. First-attempt drops and delayed acknowledgments are injected on the receiving tab, not in production preference traffic. Every targeted message is counted; retries are recorded.",
+    "recovery": "Production peer presence advertises complete stamped registers. Newer valid remote stamps are merged; lagging peers receive throttled directed snapshots. The recovery journal counts observations and repairs, not guaranteed durable consensus.",
+    "caveats": "Visible/background throttling, device scheduling, multiple peers, and browser security restrictions affect results. Report only represents the machine and session in which it was collected. Fault-injected RTT includes intentional delay and retry timeout and must not be mixed into the normal 100ms performance benchmark."
+  },
+  "diagnostics": {
+    "sentUpdates": 0,
+    "receivedUpdates": 0,
+    "lastPreferenceDeliveryApproxMs": null,
+    "pingRttMs": [],
+    "conflictsObservedByMainEngine": 0,
+    "repairChecks": 21,
+    "repairedRegisters": 0,
+    "repairSnapshotsSent": 0,
+    "lastRecovery": null
+  },
+  "convergence": {
+    "state": "converged",
+    "detail": "All 3 reported full preference registers match.",
+    "disagreement": [],
+    "fingerprint": "742F6CB9",
+    "revisionFingerprint": "5A4E1340",
+    "history": [
+      {
+        "at": "2026-10-19T12:41:40.895Z",
+        "state": "alone",
+        "detail": "Open another tab to monitor consistency.",
+        "peers": 0
+      },
+      {
+        "at": "2026-10-19T12:41:40.903Z",
+        "state": "converged",
+        "detail": "All 2 reported full preference registers match.",
+        "peers": 1
+      }
+    ]
+  },
+  "benchmark": {
+    "id": "lab-1792413711162-uxejmq37",
+    "startedAt": "2026-10-19T12:41:51.162Z",
+    "finishedAt": "2026-10-19T12:41:51.206Z",
+    "targetPeer": "5eb5c628",
+    "requested": 100,
+    "samples": [
+      {
+        "sequence": 1,
+        "peer": "5eb5c628",
+        "deliveryMs": 1.1,
+        "acknowledgementMs": 1.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 2,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 3,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 4,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 5,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 6,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 7,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.2,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 8,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 9,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 10,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 11,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 12,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 13,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 14,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 15,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 16,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 17,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 18,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 19,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 20,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 21,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 22,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 23,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 24,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 1.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 25,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 26,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 27,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 28,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 29,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 30,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 31,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.2,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 32,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 33,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 34,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 35,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 36,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.2,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 37,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 38,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 39,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 40,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 41,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 42,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 43,
+        "peer": "5eb5c628",
+        "deliveryMs": 2.1,
+        "acknowledgementMs": 2.1,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 44,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 45,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 46,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 47,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 48,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 49,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 50,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 51,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 52,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 53,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 54,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 55,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.2,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 56,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 57,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 58,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 59,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 60,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 61,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 62,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 1.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 63,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 64,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 65,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 66,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 67,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 68,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 69,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 70,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.7,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 71,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 72,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 73,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 74,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 75,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.4,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 76,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 77,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 78,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 79,
+        "peer": "5eb5c628",
+        "deliveryMs": 1.4,
+        "acknowledgementMs": 1.5,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 80,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 81,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 82,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.2,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 83,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 84,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 85,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 86,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 87,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 88,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.6,
+        "acknowledgementMs": 0.6,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 89,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 90,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 91,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 92,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 93,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 94,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 95,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 96,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.3,
+        "acknowledgementMs": 0.2,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 97,
+        "peer": "5eb5c628",
+        "deliveryMs": 2,
+        "acknowledgementMs": 1.9,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 98,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 99,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      },
+      {
+        "sequence": 100,
+        "peer": "5eb5c628",
+        "deliveryMs": 0.4,
+        "acknowledgementMs": 0.3,
+        "passed": true,
+        "reason": "Applied by peer"
+      }
+    ],
+    "deliveryStats": {
+      "count": 100,
+      "average": 0.39,
+      "median": 0.3,
+      "p95": 0.4,
+      "maximum": 2.1
+    },
+    "rttStats": {
+      "count": 100,
+      "average": 0.378,
+      "median": 0.3,
+      "p95": 1.1,
+      "maximum": 2.1
+    },
+    "achievedUnder100ms": 100
+  },
+  "stress": {
+    "id": "lab-1792413712040-xtv7uoh5",
+    "startedAt": "2026-10-19T12:41:52.040Z",
+    "finishedAt": "2026-10-19T12:41:52.060Z",
+    "targetPeer": "5eb5c628",
+    "requested": 20,
+    "trials": [
+      {
+        "sequence": 1,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 1.2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 2,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 3,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.5,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 4,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 5,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 2.5,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 6,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.7,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 7,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.9,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 8,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.7,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 9,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.7,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 10,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 11,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.5,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 12,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 2.1,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 13,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 14,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 15,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.9,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 16,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.9,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 17,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.6,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 18,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 1.1,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 19,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 2,
+        "reason": "Verified in both tabs"
+      },
+      {
+        "sequence": 20,
+        "localWinner": "5eb5c628",
+        "remoteWinner": "5eb5c628",
+        "expectedWinner": "5eb5c628",
+        "converged": true,
+        "elapsedMs": 0.9,
+        "reason": "Verified in both tabs"
+      }
+    ],
+    "converged": 20
+  },
+  "fanout": {
+    "id": "robust-1792413713744-9gw15g2k",
+    "startedAt": "2026-10-19T12:41:53.744Z",
+    "finishedAt": "2026-10-19T12:41:53.757Z",
+    "mode": "normal",
+    "targetPeers": [
+      "5eb5c628",
+      "e9935c1c"
+    ],
+    "requestedPerPeer": 12,
+    "attemptsAllowed": 2,
+    "samples": [
+      {
+        "sequence": 1,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 1.1,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 1,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 2.2,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 2,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 2,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 3,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 3,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 4,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 4,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 5,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.2,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 5,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.5,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 6,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 6,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 7,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 7,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 8,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 8,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 1.6,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 9,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 9,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 10,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 10,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 11,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 11,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 12,
+        "peer": "5eb5c628",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.3,
+        "reason": "ACK received"
+      },
+      {
+        "sequence": 12,
+        "peer": "e9935c1c",
+        "success": true,
+        "attempts": 1,
+        "recovered": false,
+        "ackRttMs": 0.4,
+        "reason": "ACK received"
+      }
+    ],
+    "successful": 24,
+    "failed": 0,
+    "recovered": 0,
+    "rttStats": {
+      "count": 24,
+      "average": 0.517,
+      "median": 0.4,
+      "p95": 1.6,
+      "maximum": 2.2
+    },
+    "cancelled": false,
+    "timeoutMs": 600
+  }
+}
